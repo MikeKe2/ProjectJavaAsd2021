@@ -9,20 +9,10 @@ import monkey.ai.Player;
  * Method with Application for Game Playing</i>. 1 Jan. 1990, pp. 5-7. A single
  * istance of this class for a certain {@link Board} takes Θ({@link Board#SIZE})
  * memory.
- *
- * @author Stefano Volpe
- * @version 1.0
- * @since 1.0
  */
 public class ZobristHasher implements Cloneable {
 
-	/**
-	 * A symmetry is a transformation that leaves an empty {@link Board} unchanged.
-	 *
-	 * @author Stefano Volpe
-	 * @version 1.0
-	 * @since 1.0
-	 */
+	/**A symmetry is a transformation that leaves an empty {@link Board} unchanged*/
 	public enum Symmetry {
 
 		/** A symmetry that does nothing (e). */
@@ -150,9 +140,6 @@ public class ZobristHasher implements Cloneable {
 		 * @throws IllegalArgumentException The {@link Board} in question is not, in
 		 *                                  fact, square. Not thrown if p is
 		 *                                  <code>null</code>.
-		 * @author Stefano Volpe
-		 * @version 1.0
-		 * @since 1.0
 		 */
 		static protected void validateSquareBoard(Position p) {
 			if (p != null && p.ROWSNUMBER != p.COLUMNSNUMBER)
@@ -235,14 +222,7 @@ public class ZobristHasher implements Cloneable {
 		return hashCodeCandidates[symmetryUsed.ordinal()];
 	}
 
-	/**
-	 * Create a clone of this {@link ZobristHasher}.
-	 *
-	 * @return The desired clone.
-	 * @author Stefano Volpe
-	 * @version 1.0
-	 * @since 1.0
-	 */
+	/** Create a clone of this {@link ZobristHasher}.*/
 	public ZobristHasher clone() {
 		try {
 			ZobristHasher copy = (ZobristHasher) super.clone();

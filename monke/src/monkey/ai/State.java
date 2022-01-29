@@ -23,20 +23,18 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 *
 	 * @return The desired clone.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public Self clone();
+	Self clone();
 
 	/**
 	 * Defines which {@link Player} should play next.
 	 *
 	 * @return The {@link Player} who should play next.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public Player player();
+	Player player();
 
 	/**
 	 * Checks if a certain <code>Action</code> is legal.
@@ -45,10 +43,9 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 * @throws NullPointerException a is <code>null</code>.
 	 * @return <code>true</code> just in case a is legal.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public boolean isLegal(Action a);
+	boolean isLegal(Action a);
 
 	/**
 	 * Defines the set of legal <code>Action</code>s, excluding the irrelevant ones.
@@ -56,10 +53,9 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 * @return An {@link java.lang.Iterable Iterator} containing the legal
 	 *         <code>Action</code>s for the state.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public java.util.Iterator<Action> actions();
+	java.util.Iterator<Action> actions();
 
 	/**
 	 * Defines the result of a certain move updating the {@link State} accordingly.
@@ -68,10 +64,9 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 * @throws IllegalArgumentException Illegal move.
 	 * @return A reference to this {@link State}.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public Self result(Action a);
+	Self result(Action a);
 
 	/**
 	 * Reverts the state to its parent.
@@ -79,10 +74,10 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 * @return A reference to this {@link State}.
 	 * @throws IllegalCallerException This is the initial {@link State}.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public Self revert();
+	@SuppressWarnings("JavadocReference")
+	Self revert();
 
 	/**
 	 * Checks for terminal {@link State}s.
@@ -90,10 +85,9 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 * @see #utility
 	 * @return <code>true</code> just in case the {@link State} is terminal.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public boolean terminalTest();
+	boolean terminalTest();
 
 	/**
 	 * When called on a terminal {@link State}, defines the payoff of such an ending
@@ -105,10 +99,10 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 * @throws IllegalCallerException Non-terminal {@link State}.
 	 * @throws NullPointerException   The {@link Player} is null.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public int utility(Player p);
+	@SuppressWarnings("JavadocReference")
+	int utility(Player p);
 
 	/**
 	 * Defines the alpha value of the relative initial {@link State} for a certain
@@ -120,10 +114,9 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 *         <code>p</code>.
 	 * @throws NullPointerException The {@link Player} is null.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public int initialAlpha(Player p);
+	int initialAlpha(Player p);
 
 	/**
 	 * Defines the beta value of the relative initial {@link State} for a certain
@@ -135,10 +128,9 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 *         <code>p</code>.
 	 * @throws NullPointerException The {@link Player} is null.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public int initialBeta(Player p);
+	int initialBeta(Player p);
 
 	/**
 	 * Returns an estimate of the expected utility of the game from the current
@@ -149,10 +141,9 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 * @return The estimated payoff for {@link Player} <code>p</code>.
 	 * @throws NullPointerException The {@link Player} is null.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public int eval(Player p);
+	int eval(Player p);
 
 	/**
 	 * Computes an overestimate of the height of the game tree whose root is this
@@ -160,10 +151,9 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 *
 	 * @return The overestimated height.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public int overestimatedHeight();
+	int overestimatedHeight();
 
 	/**
 	 * Suggests a reasonable transposition table capacity assuming this instance is
@@ -171,20 +161,18 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 *
 	 * @return The suggested capacity.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public int ttSuggestedCapacity();
+	int ttSuggestedCapacity();
 
 	/**
 	 * Computes the number of legal, relevant actions for the current {@link State}.
 	 *
 	 * @return The number of legal actions.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public int countRelevantActions();
+	int countRelevantActions();
 
 	/**
 	 * Let r be the hashing representant for this {@link State}; if a is a legal
@@ -194,10 +182,9 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 * @param a A legal action for this {@link State}.
 	 * @return The computed action.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public Action convertToHashedAction(Action a);
+	Action convertToHashedAction(Action a);
 
 	/**
 	 * Let r be the hashing representant for this {@link State}; if a is a legal
@@ -207,9 +194,8 @@ public interface State<Self extends State<Self, Action>, Action> extends Cloneab
 	 * @param a A legal action for the hashing representant.
 	 * @return The computed action.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
-	public Action revertFromHashedAction(Action a);
+	Action revertFromHashedAction(Action a);
 
 }

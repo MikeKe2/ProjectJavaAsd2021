@@ -10,39 +10,12 @@ package monkey.ai;
  */
 public enum Player {
 
-	/** The first agent to play. */
-	P1(true) {
-		public Player not() {
-			return P2;
-		}
-	},
-	/** The second agent to play. */
-	P2(false) {
-		public Player not() {
-			return P1;
-		}
-	};
+	P1() {public Player not() {return P2;}},
+	P2() {public Player not() {return P1;}};
 
-	/**
-	 * Constructs a new {@link Player} based on whether they will be playing first
-	 * or not.
-	 *
-	 * @param first <code>true</code> just in case the {@link Player} will be acting
-	 *              first.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
-	 */
-	Player(boolean first) {
+	Player() {
 	}
 
-	/**
-	 * Returns the other {@link Player}.
-	 *
-	 * @return The other {@link Player}.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
-	 */
+	/**Returns the other {@link Player}.*/
 	abstract public Player not();
 }

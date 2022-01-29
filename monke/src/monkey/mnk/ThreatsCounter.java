@@ -5,10 +5,6 @@ import monkey.ai.Player;
 /**
  * A <code>ThreatsCounter</code> keeps track of the number of {@link Threat}s of
  * a certain type.
- *
- * @author Gaia Clerici
- * @version 1.0
- * @since 1.0
  */
 public class ThreatsCounter implements Cloneable {
 
@@ -17,11 +13,6 @@ public class ThreatsCounter implements Cloneable {
 
 	/**
 	 * Constructs a new {@link ThreatsCounter}.
-	 *
-	 * @param threat {@link Threat} to keep track of.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public ThreatsCounter(Threat threat) {
 		THREAT = threat;
@@ -29,11 +20,6 @@ public class ThreatsCounter implements Cloneable {
 
 	/**
 	 * Creates a clone of this {@link ThreatsCounter}.
-	 *
-	 * @return A clone of this instance.
-	 * @author Stefano Volpe
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public ThreatsCounter clone() {
 		try {
@@ -48,12 +34,7 @@ public class ThreatsCounter implements Cloneable {
 	 * Increments a given {@link monkey.ai.Player Player}'s counter. Does not
 	 * increment anything if such {@link monkey.ai.Player Player} is <code>
 	 * null</code>.
-	 *
 	 * @param player Specifies whose counter is to be incremented.
-	 * @throws NullPointerException The player is <code>null</code>.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public void increment(Player player) {
 		// if (player == null)
@@ -68,13 +49,7 @@ public class ThreatsCounter implements Cloneable {
 	 * Decrements a given {@link monkey.ai.Player Player}'s counter. Does not
 	 * increment anything if such {@link monkey.ai.Player Player} is <code>
 	 * null</code>.
-	 *
 	 * @param player Specifies whose counter is to be decremented.
-	 * @throws IllegalCallerException The counter is already at 0.
-	 * @throws NullPointerException   The player is <code>null</code>.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public void decrement(Player player) {
 		// if (player == null)
@@ -93,14 +68,8 @@ public class ThreatsCounter implements Cloneable {
 	/**
 	 * Returns the current value of a given {@link monkey.ai.Player Player}'s
 	 * counter.
-	 *
 	 * @param player Specifies whose counter is to be decremented. Cannot be
 	 *               <code>null</code>.
-	 * @throws NullPointerException The player is <code>null</code>.
-	 * @return The current value of the desired counter.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public int get(Player player) {
 		// if (player == null)
@@ -110,11 +79,6 @@ public class ThreatsCounter implements Cloneable {
 
 	/**
 	 * Returns a string representation of the object.
-	 *
-	 * @return A string representation of this object.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	@Override
 	public String toString() {

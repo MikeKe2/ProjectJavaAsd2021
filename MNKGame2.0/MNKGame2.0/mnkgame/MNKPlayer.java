@@ -22,6 +22,8 @@
 
 package mnkgame;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * Interface for a (M,N,K)-game software player.
  * <p>
@@ -50,7 +52,7 @@ public interface MNKPlayer {
    *
    * @return an element of <code>FC</code>
 	 */
-	public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC);	
+	public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) throws ExecutionException;
 
 	/**
    * Returns the player name

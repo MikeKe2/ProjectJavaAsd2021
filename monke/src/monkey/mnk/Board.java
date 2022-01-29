@@ -19,6 +19,57 @@ import monkey.util.ObjectUtils;
  */
 public class Board implements monkey.ai.State<Board, Position> {
 
+	/** Utilities instance for generic objects. */
+	final private ObjectUtils objectUtils = new ObjectUtils();
+	/** A P1 alpha value valid after a generic first move of theirs. */
+	final private int INITIALALPHAP1;
+	/** A P1 beta value valid after a generic first move of theirs. */
+	final private int INITIALBETAP1;
+	/** A P2 alpha value valid after a generic first move of P1. */
+	final private int INITIALALPHAP2;
+	/** A P2 beta value valid after a generic first move of P1. */
+	final private int INITIALBETAP2;
+	/**
+	 * Stores the {@link Board}'s {@link mnkgame.MNKCell cells}. Not a final field
+	 * because of {@link #clone}.
+	 */
+	private MNKCellState[][] cellStates;
+	/** The moves played so far. Not a final field because of {@link #clone}. */
+	private Stack<Position> history = new Stack<Position>();
+	/** The current game state. */
+	private MNKGameState state;
+	/**
+	 * Stores both currently legal and illegal actions ({@link #SIZE} in total),
+	 * sorted by decreasing heuristic value.
+	 */
+	final private Position[] actionsCandidates;
+	/**
+	 * Counters for both no-hole {@link #K}-threats and
+	 * {@link #K}<code>-1</code>-threats with a hole. Not a final field because of
+	 * {@link #clone}.
+	 */
+	private ThreatsManager kCounter;
+	/**
+	 * Counters for both no-hole {@link #K}<code>-1</code>-threats and
+	 * {@link #K}<code>-2</code>-threats with a hole. Not a final field because of
+	 * {@link #clone}.
+	 */
+	private ThreatsManager kMinusOneCounter;
+	/**
+	 * Counters for no-hole {@link #K}<code>-2</code>-threats. Not a final field
+	 * because of {@link #clone}.
+	 */
+	private ThreatsManager kMinusTwoCounter;
+	/**
+	 * Counters for adjacent marked cells used for a simplified pattern search. Not
+	 * a final field because of {@link #clone}.
+	 */
+	private int[][] adjacencyCounters;
+	/**
+	 * Utility for Zobrist hashing. Not a final field because of {@link #clone}.
+	 */
+	private ZobristHasher zobristHasher;
+
 	/** Number of rows. */
 	final public int M;
 	/** Number of columns. */
@@ -441,8 +492,14 @@ public class Board implements monkey.ai.State<Board, Position> {
 	 */
 	protected Position[] generateActionCandidates() {
 		Position[] res = new Position[SIZE];
-		int firstRow = 0, lastRow = M - 1, firstColumn = 0, lastColumn = N - 1, i = SIZE - 1, row = firstRow,
+		int firstRow = 0,
+				lastRow = M - 1,
+				firstColumn = 0,
+				lastColumn = N - 1,
+				i = SIZE - 1,
+				row = firstRow,
 				column = firstColumn;
+
 		// Escargot
 		while (i >= 0) {
 			// Top left to top right
@@ -677,56 +734,4 @@ public class Board implements monkey.ai.State<Board, Position> {
 			iterator.next();
 		return counter;
 	}
-
-	/** Utilities instance for generic objects. */
-	final private ObjectUtils objectUtils = new ObjectUtils();
-	/** A P1 alpha value valid after a generic first move of theirs. */
-	final private int INITIALALPHAP1;
-	/** A P1 beta value valid after a generic first move of theirs. */
-	final private int INITIALBETAP1;
-	/** A P2 alpha value valid after a generic first move of P1. */
-	final private int INITIALALPHAP2;
-	/** A P2 beta value valid after a generic first move of P1. */
-	final private int INITIALBETAP2;
-	/**
-	 * Stores the {@link Board}'s {@link mnkgame.MNKCell cells}. Not a final field
-	 * because of {@link #clone}.
-	 */
-	private MNKCellState[][] cellStates;
-	/** The moves played so far. Not a final field because of {@link #clone}. */
-	private Stack<Position> history = new Stack<Position>();
-	/** The current game state. */
-	private MNKGameState state;
-	/**
-	 * Stores both currently legal and illegal actions ({@link #SIZE} in total),
-	 * sorted by decreasing heuristic value.
-	 */
-	final private Position[] actionsCandidates;
-	/**
-	 * Counters for both no-hole {@link #K}-threats and
-	 * {@link #K}<code>-1</code>-threats with a hole. Not a final field because of
-	 * {@link #clone}.
-	 */
-	private ThreatsManager kCounter;
-	/**
-	 * Counters for both no-hole {@link #K}<code>-1</code>-threats and
-	 * {@link #K}<code>-2</code>-threats with a hole. Not a final field because of
-	 * {@link #clone}.
-	 */
-	private ThreatsManager kMinusOneCounter;
-	/**
-	 * Counters for no-hole {@link #K}<code>-2</code>-threats. Not a final field
-	 * because of {@link #clone}.
-	 */
-	private ThreatsManager kMinusTwoCounter;
-	/**
-	 * Counters for adjacent marked cells used for a simplified pattern search. Not
-	 * a final field because of {@link #clone}.
-	 */
-	private int[][] adjacencyCounters;
-	/**
-	 * Utility for Zobrist hashing. Not a final field because of {@link #clone}.
-	 */
-	private ZobristHasher zobristHasher;
-
 }

@@ -1,38 +1,51 @@
 package monkey.ai;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.concurrent.TimeoutException;
 import monkey.ai.table.Entry;
 import monkey.ai.table.SearchResult;
 import monkey.ai.table.SearchResult.ScoreType;
 import monkey.util.ObjectUtils;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.concurrent.TimeoutException;
 
 /**
  * An <code>AI</code> is a generic, backtracking alpha-beta pruner for a
  * deterministic, turn-taking, two-player, zero-sum game of perfect information.
  * See S. Russell, P. Norvig, <i>Artificial Intelligence: A Modern Approach</i>,
  * 3rd ed., Prentice Hall, p. 167f.
- *
  * @param <S> The type to be used for game {@link State}s.
  * @param <A> The type of the moves of the game.
- * @author Gaia Clerici
- * @version 1.0
- * @since 1.0
  */
 public class AI<S extends State<S, A>, A> {
+	/**
+	 * The player the {@link AI} will play as.
+	 */
+	final private Player player;
+	/** The current {@link State} of the game. */
+	private S state;
+	/** The maximum number of milliseconds usable to select a move. */
+	final private long timeLimit;
+	/** Utilities instance for generic objects. */
+	final private ObjectUtils objectUtils = new ObjectUtils();
+	/** A transposition table for this instance of the {@link AI}. */
+	final private HashMap<Integer, Entry<S, A>> transpositionTable;
+	/** Start time of the current turn. */
+	private long startTime;
+	/**
+	 * Number of nodes actually inspected since the beginning of the last alpha-beta
+	 * search.
+	 */
+	private long inspectedNodes;
+	/** Random number generator. */
+	final private java.util.Random random = new java.util.Random(System.currentTimeMillis());
 
 	/**
 	 * Constructs a new {@link AI} for a certain {@link Player} given an initial
 	 * {@link State} and a timeout in milliseconds.
-	 *
 	 * @param p  The player the {@link AI} will play as.
 	 * @param s0 The initial {@link State} of the game.
 	 * @param t  The maximum number of milliseconds usable to select a move.
-	 * @throws NullPointerException Any of the arguments are <code>null</code>.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public AI(Player p, S s0, long t) {
 		// if (p == null || s0 == null)
@@ -41,18 +54,13 @@ public class AI<S extends State<S, A>, A> {
 		state = s0;
 		timeLimit = t;
 		final int capacity = state.ttSuggestedCapacity();
-		transpositionTable = new HashMap<Integer, Entry<S, A>>(capacity);
+		transpositionTable = new HashMap<>(capacity);
 	}
 
 	/**
 	 * Updates the current {@link State} with the given action.
-	 *
 	 * @param a A legal action to inform this {@link AI} about.
-	 * @throws IllegalArgumentException <code>a</code> is an illegal action for the
-	 *                                  current state.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
+	 * @throws IllegalArgumentException <code>a</code> is an illegal action for the current state.
 	 */
 	public void update(A a) {
 		state.result(a);
@@ -63,13 +71,8 @@ public class AI<S extends State<S, A>, A> {
 	 * legal actions to be played using iterative deepening search. See S. Russell,
 	 * P. Norvig, <i>Artificial Intelligence: A Modern Approach</i>, 3rd ed.,
 	 * Prentice Hall, p. 88f.
-	 *
 	 * @throws IllegalArgumentException The player does not have the move or if the
 	 *                                  state is terminal.
-	 * @return A legal action to be played.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public A iterativeDeepeningSearch() {
 		startTime = System.currentTimeMillis();
@@ -98,17 +101,13 @@ public class AI<S extends State<S, A>, A> {
 	 *
 	 * @throws IllegalArgumentException The player does not have the move or if the
 	 *                                  state is terminal.
-	 * @return A legal action to be played.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public A immediateSearch() {
 		// if (state.terminalTest())
 		// throw new IllegalArgumentException("s is a terminal state.");
 		// if (player != state.player())
 		// throw new IllegalArgumentException("It's not your turn.");
-		final java.util.ArrayList<A> bestMoves = new java.util.ArrayList<A>(state.countRelevantActions());
+		final java.util.ArrayList<A> bestMoves = new java.util.ArrayList<>(state.countRelevantActions());
 		final Iterator<A> actions = state.actions();
 		A action = actions.next();
 		int maxEval = state.result(action).eval(player);
@@ -135,13 +134,6 @@ public class AI<S extends State<S, A>, A> {
 	 * Dmitrijs Rutko, <i>Fuzzified Algorithm for Game Tree Search with Statistical
 	 * and Analytical Evaluation</i>, in <i>Scientific Papers</i>, vol. 770, 2011,
 	 * Univerity of Latvia, p. 94f.
-	 *
-	 * @param depthLimit Maximum depth to be inspected
-	 * @throws TimeoutException The time limit is almost over.
-	 * @return A legal action to be played.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	protected A bestNodeLimitedSearch(int depthLimit) throws TimeoutException {
 		int alpha = state.initialAlpha(player), beta = state.initialBeta(player),
@@ -181,13 +173,9 @@ public class AI<S extends State<S, A>, A> {
 	 * Latvia, p. 95f.
 	 *
 	 * @see #bestNodeLimitedSearch
-	 * @param alpha        First extreem of the alpha-beta range.
-	 * @param beta         Second extreem of the alpha-beta range.
+	 * @param alpha        First extreme of the alpha-beta range.
+	 * @param beta         Second extreme of the alpha-beta range.
 	 * @param subtreeCount Number of subtrees that will be tested.
-	 * @return The suggested separation value.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	protected int nextGuess(int alpha, int beta, int subtreeCount) {
 		return alpha + (beta - alpha) * (subtreeCount - 1) / subtreeCount;
@@ -211,7 +199,6 @@ public class AI<S extends State<S, A>, A> {
 	 * @throws NullPointerException The state is null.
 	 * @throws TimeoutException     The time limit is almost over.
 	 * @author Gaia Clerici
-	 * @version 1.0
 	 * @since 1.0
 	 */
 	protected int maxValue(S s, int alpha, int beta, int depthLimit) throws TimeoutException {
@@ -260,7 +247,7 @@ public class AI<S extends State<S, A>, A> {
 			s.revert();
 			timeCheck();
 			if (v.compareTo(beta) >= 0) {
-				addSearchResult(cachedEntry, new SearchResult<A>(s.convertToHashedAction(bestOrRefutationMove), v,
+				addSearchResult(cachedEntry, new SearchResult<>(s.convertToHashedAction(bestOrRefutationMove), v,
 						ScoreType.LOWERBOUND, depthLimit, inspectedNodes - previouslyInspectedNodes));
 				return v;
 			}
@@ -280,14 +267,14 @@ public class AI<S extends State<S, A>, A> {
 				s.revert();
 				timeCheck();
 				if (v.compareTo(beta) >= 0) {
-					addSearchResult(cachedEntry, new SearchResult<A>(s.convertToHashedAction(bestOrRefutationMove), v,
+					addSearchResult(cachedEntry, new SearchResult<>(s.convertToHashedAction(bestOrRefutationMove), v,
 							ScoreType.LOWERBOUND, depthLimit, inspectedNodes - previouslyInspectedNodes));
 					return v;
 				}
 				alpha = objectUtils.max(alpha, v);
 			}
 		}
-		addSearchResult(cachedEntry, new SearchResult<A>(s.convertToHashedAction(bestOrRefutationMove), v,
+		addSearchResult(cachedEntry, new SearchResult<>(s.convertToHashedAction(bestOrRefutationMove), v,
 				ScoreType.TRUEVALUE, depthLimit, inspectedNodes - previouslyInspectedNodes));
 		return v;
 	}
@@ -310,7 +297,6 @@ public class AI<S extends State<S, A>, A> {
 	 * @throws NullPointerException The state is null.
 	 * @throws TimeoutException     The time limit is almost over.
 	 * @author Gaia Clerici
-	 * @version 1.0
 	 * @since 1.0
 	 */
 	protected int minValue(S s, int alpha, int beta, int depthLimit) throws TimeoutException {
@@ -359,7 +345,7 @@ public class AI<S extends State<S, A>, A> {
 			s.revert();
 			timeCheck();
 			if (v.compareTo(alpha) <= 0) {
-				addSearchResult(cachedEntry, new SearchResult<A>(s.convertToHashedAction(bestOrRefutationMove), v,
+				addSearchResult(cachedEntry, new SearchResult<>(s.convertToHashedAction(bestOrRefutationMove), v,
 						ScoreType.UPPERBOUND, depthLimit, inspectedNodes - previouslyInspectedNodes));
 				return v;
 			}
@@ -379,14 +365,14 @@ public class AI<S extends State<S, A>, A> {
 				s.revert();
 				timeCheck();
 				if (v.compareTo(alpha) <= 0) {
-					addSearchResult(cachedEntry, new SearchResult<A>(s.convertToHashedAction(bestOrRefutationMove), v,
+					addSearchResult(cachedEntry, new SearchResult<>(s.convertToHashedAction(bestOrRefutationMove), v,
 							ScoreType.UPPERBOUND, depthLimit, inspectedNodes - previouslyInspectedNodes));
 					return v;
 				}
 				beta = objectUtils.min(beta, v);
 			}
 		}
-		addSearchResult(cachedEntry, new SearchResult<A>(s.convertToHashedAction(bestOrRefutationMove), v,
+		addSearchResult(cachedEntry, new SearchResult<>(s.convertToHashedAction(bestOrRefutationMove), v,
 				ScoreType.TRUEVALUE, depthLimit, inspectedNodes - previouslyInspectedNodes));
 		return v;
 	}
@@ -400,7 +386,6 @@ public class AI<S extends State<S, A>, A> {
 	 * @param d Maximum depth to be inspected
 	 * @return <code>true</code> just in case {@link State#eval} should be applied.
 	 * @author Gaia Clerici
-	 * @version 1.0
 	 * @since 1.0
 	 */
 	protected boolean cutoffTest(S s, int d) {
@@ -414,10 +399,10 @@ public class AI<S extends State<S, A>, A> {
 	 *
 	 * @throws TimeoutException The time limit is almost over.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
 	protected void timeCheck() throws TimeoutException {
+		float RELAXATION = 0.94f;
 		if (System.currentTimeMillis() - startTime > timeLimit * RELAXATION)
 			throw new TimeoutException();
 	}
@@ -433,39 +418,14 @@ public class AI<S extends State<S, A>, A> {
 	 * @throws NullPointerException newSearchResult is <code>null</code>.
 	 * @throws TimeoutException     The time limit is almost over.
 	 * @author Stefano Volpe
-	 * @version 1.0
 	 * @since 1.0
 	 */
 	private void addSearchResult(Entry<S, A> cachedEntry, SearchResult<A> newSearchResult) throws TimeoutException {
 		if (cachedEntry == null)
-			transpositionTable.put(state.hashCode(), new Entry<S, A>(newSearchResult));
+			transpositionTable.put(state.hashCode(), new Entry<>(newSearchResult));
 		else
 			cachedEntry.add(newSearchResult);
 		timeCheck();
 	}
-
-	/**
-	 * The player the {@link AI} will play as.
-	 */
-	final private Player player;
-	/** The current {@link State} of the game. */
-	private S state;
-	/** The maximum number of milliseconds usable to select a move. */
-	final private long timeLimit;
-	/** Utilities instance for generic objects. */
-	final private ObjectUtils objectUtils = new ObjectUtils();
-	/** The higher, the more time is used at most for each search. */
-	final private float RELAXATION = 0.94f;
-	/** A transposition table for this instance of the {@link AI}. */
-	final private HashMap<Integer, Entry<S, A>> transpositionTable;
-	/** Start time of the current turn. */
-	private long startTime;
-	/**
-	 * Number of nodes actually inspected since the beginning of the last alpha-beta
-	 * search.
-	 */
-	private long inspectedNodes;
-	/** Random number generator. */
-	final private java.util.Random random = new java.util.Random(System.currentTimeMillis());
 
 }

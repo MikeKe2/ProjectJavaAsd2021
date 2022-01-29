@@ -20,10 +20,6 @@ public class SearchResult<Action> implements Comparable<SearchResult<Action>> {
 
 	/**
 	 * A <code>ScoreType</code> indicates the nature of the {@link #SCORE}.
-	 *
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public enum ScoreType {
 
@@ -65,9 +61,6 @@ public class SearchResult<Action> implements Comparable<SearchResult<Action>> {
 	 *                                  <code>null</code>.
 	 * @throws IllegalArgumentException searchDepth or searchedNodes are negative or
 	 *                                  zero.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public SearchResult(Action move, int score, ScoreType flag, int searchDepth, long searchedNodes) {
 		// if (move == null || flag == null)
@@ -90,9 +83,6 @@ public class SearchResult<Action> implements Comparable<SearchResult<Action>> {
 	 * 
 	 * @throws NullPointerException {@inheritDoc}
 	 * @throws ClassCastException   {@inheritDoc}
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public int compareTo(SearchResult<Action> s) {
 		// if (s == null)
@@ -105,12 +95,7 @@ public class SearchResult<Action> implements Comparable<SearchResult<Action>> {
 	}
 
 	/**
-	 * Returns a string representation of the object.
-	 *
 	 * @return A string representation of this object.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	@Override
 	public String toString() {

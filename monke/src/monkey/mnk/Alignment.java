@@ -16,11 +16,7 @@ public class Alignment implements Cloneable {
 
 	/**
 	 * Starting from the top left cell of the {@link Alignment}, you can move
-	 * following a cerain <code>Direction</code> to get to the others.
-	 *
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
+	 * following a certain <code>Direction</code> to get to the others.
 	 */
 	public enum Direction {
 
@@ -38,10 +34,6 @@ public class Alignment implements Cloneable {
 	/**
 	 * An {@link Alignment} can be in exactly one of the following
 	 * <code>State</code>s, depending on the marks added to it.
-	 *
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public enum State {
 
@@ -80,9 +72,6 @@ public class Alignment implements Cloneable {
 	 * @throws IllegalArgumentException  length is negative or zero
 	 * @throws IndexOutOfBoundsException last cell out of firstCell's bounds
 	 * @throws NullPointerException      firstCell, or direction, or both are null
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public Alignment(Position firstCell, Direction direction, int length, MNKCellState firstExt, MNKCellState secondExt) {
 		// if (length <= 0)

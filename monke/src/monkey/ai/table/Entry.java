@@ -9,9 +9,6 @@ package monkey.ai.table;
  *
  * @param <S> The type to be used for game {@link monkey.ai.State}s.
  * @param <A> The type of the moves of the game.
- * @author Gaia Clerici
- * @version 1.0
- * @since 1.0
  */
 public class Entry<S extends monkey.ai.State<S, A>, A> {
 
@@ -20,9 +17,6 @@ public class Entry<S extends monkey.ai.State<S, A>, A> {
 	 *
 	 * @param searchResult An initial, non-<code>null</code> {@link SearchResult}.
 	 * @throws NullPointerException searchResult is <code>null</code>.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public Entry(SearchResult<A> searchResult) {
 		// if (searchResult == null)
@@ -36,9 +30,6 @@ public class Entry<S extends monkey.ai.State<S, A>, A> {
 	 * @param state The current state of the game.
 	 * @param depth The maximum depth to be inspected.
 	 * @return The selected {@link SearchResult}.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public SearchResult<A> pickSearchResult(S state, int depth) {
 		final boolean isFirstLegal = state.isLegal(state.revertFromHashedAction(first.MOVE)),
@@ -64,9 +55,6 @@ public class Entry<S extends monkey.ai.State<S, A>, A> {
 	 *
 	 * @param searchResult The non-<code>null</code> {@link SearchResult} to add.
 	 * @throws NullPointerException searchResult is <code>null</code>.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	public void add(SearchResult<A> searchResult) {
 		// if (searchResult == null)
@@ -82,9 +70,6 @@ public class Entry<S extends monkey.ai.State<S, A>, A> {
 	 * Returns a string representation of the object.
 	 *
 	 * @return A string representation of the object.
-	 * @author Gaia Clerici
-	 * @version 1.0
-	 * @since 1.0
 	 */
 	@Override
 	public String toString() {
