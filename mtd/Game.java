@@ -6,10 +6,10 @@ import mnkgame.MNKGameState;
 
 import java.util.*;
 
-public class Game {
+public class Game implements Cloneable {
 
     private MNKGameState state;
-    //private ZobristHashing zobristHashing;
+    private ZobristHashing zobristHashing;
 
     // Player constants
     //Constant representing empty spaces, i.e. "no" player.
@@ -24,6 +24,7 @@ public class Game {
     private final int m, n, k, size; // m = cols, n = rows, k = win-in a row
     private final MNKCellState[][] board; // m x n grid as 2D array
     private final Stack<MNKCell> history = new Stack<>(); // past piece placements
+    private final MNKCell[] listOfMoves;
 
     private int ply; // number of past piece placements
     private int turn, winner; // current player, winning player (if any)
@@ -36,14 +37,70 @@ public class Game {
         this.turn = turn;
         this.size = m * n;
 
+        MnkGameEvaluator evaluator = new MnkGameEvaluator(this);
+
         board = resetBoardState();
+        listOfMoves = generateMoves();
         state = MNKGameState.OPEN;
 
         ply = 0;
         winner = PLAYER_NONE;
 
-        //this.zobristHashing = new ZobristHashing();
+        this.zobristHashing = new ZobristHashing(m, n);
 
+    }
+
+
+    public Game clone() {
+        try {
+            Game clone = (Game) super.clone();
+        } catch (CloneNotSupportedException e) {
+            // Should never happen: we support clone
+            throw new InternalError(e.toString());
+        }
+    }
+
+    private MNKCell[] generateMoves() {
+        // FIXME: 31/01/2022 It's basically copied from monke
+        MNKCell[] res = new MNKCell[size];
+        int firstRow = 0,
+                lastRow = m - 1,
+                firstColumn = 0,
+                lastColumn = n - 1,
+                i = size - 1,
+                row = firstRow,
+                column = firstColumn;
+
+        // Escargot
+        while (i >= 0) {
+            // Top left to top right
+            while (column < lastColumn)
+                res[i--] = new MNKCell(row, column++);
+            res[i--] = new MNKCell(row++, column);
+            if (i < 0)
+                break;
+            ++firstRow;
+            // Top right to bottom right
+            while (row < lastRow)
+                res[i--] = new MNKCell(row++, column);
+            res[i--] = new MNKCell(row, column--);
+            if (i < 0)
+                break;
+            --lastColumn;
+            // Bottom right to bottom left
+            while (column > firstColumn)
+                res[i--] = new MNKCell(row, column--);
+            res[i--] = new MNKCell(row--, column);
+            if (i < 0)
+                break;
+            --lastRow;
+            // Bottom left to top left
+            while (row > firstRow)
+                res[i--] = new MNKCell(row--, column);
+            res[i--] = new MNKCell(row, column++);
+            ++firstColumn;
+        }
+        return res;
     }
 
     private MNKCellState[][] resetBoardState() {
@@ -53,35 +110,48 @@ public class Game {
         return res;
     }
 
-    public void update(MNKCell mnkCell) {
+    public Game update(MNKCell mnkCell) {
         final int row = mnkCell.i;
         final int column = mnkCell.j;
-    }
+        final int player = getCurrentPlayer();
 
+        board[row][column] = player == 0 ? MNKCellState.P1 : MNKCellState.P2;
+        history.push(mnkCell);
+
+        if (state == MNKGameState.OPEN && history.size() == size)
+            state = MNKGameState.DRAW;
+        zobristHashing.makeAMove(a, p);
+        return this;
+    }
 
     public int maxDepth() {
-        return size - history.length;
+        return size - history.size();
     }
 
-    public void doMove(int square, boolean checkLegal) {
-        if (checkLegal && !canDoMove(square))
-            throw new IllegalArgumentException("Illegal move.");
-        board[square] = turn;
-        history[ply++] = square;
-        winner = calculateWinner(square);
-        if (ply >= 1)
-            turn = -turn;
-    }
+    // FIXME: 30/01/2022 
 
-    public void undoMove(boolean checkLegal) {
-        if (checkLegal && !canUndoMove())
-            throw new IllegalArgumentException("Cannot undo any moves.");
-        int index = history[ply - 1];
-        turn = -turn;
-        winner = PLAYER_NONE;
-        ply--;
-        board[index] = PLAYER_NONE;
-    }
+    /**
+     * public void doMove(int square, boolean checkLegal) {
+     * if (checkLegal && !canDoMove(square))
+     * throw new IllegalArgumentException("Illegal move.");
+     * board[square] = turn;
+     * history[ply++] = square;
+     * winner = calculateWinner(square);
+     * if (ply >= 1)
+     * turn = -turn;
+     * }
+     * <p>
+     * // FIXME: 30/01/2022
+     * public void undoMove(boolean checkLegal) {
+     * if (checkLegal && !canUndoMove())
+     * throw new IllegalArgumentException("Cannot undo any moves.");
+     * int index = history[ply - 1];
+     * turn = -turn;
+     * winner = PLAYER_NONE;
+     * ply--;
+     * board[index] = PLAYER_NONE;
+     * }
+     */
 
     public int getLegalMoves() {
         if (winner != PLAYER_NONE)
@@ -89,6 +159,7 @@ public class Game {
         return getSquares() - getOccupiedSquares();
     }
 
+    // FIXME: 30/01/2022 
     public boolean canDoMove(int square) {
         return (0 <= square && square < n * m) && (board[square] == PLAYER_NONE)
                 && (winner == PLAYER_NONE)
@@ -105,6 +176,10 @@ public class Game {
 
     public int getRows() {
         return n;
+    }
+
+    public int getK() {
+        return k;
     }
 
     public int getDiagonals() {

@@ -2,7 +2,7 @@ package mtd;
 
 import mtd.Game;
 
-public abstract class MnkGameEvaluator {
+public class MnkGameEvaluator {
 
     public static final int PLAYER_MAX = Game.PLAYER_1;
     public static final int PLAYER_MIN = Game.PLAYER_2;

@@ -1,4 +1,4 @@
-- Command-line compile.  In the mnkgame/ directory run::
+    - Command-line compile.  In the mnkgame/ directory run::
 
 		javac -cp ".." *.java
 

@@ -121,7 +121,7 @@ public class MNKPlayerTester {
 			this.B = B;
 		}
 
-		public MNKCell call()  throws InterruptedException {
+		public MNKCell call() throws ExecutionException {
 			return P.selectCell(B.getFreeCells(),B.getMarkedCells());
 		}
 	}

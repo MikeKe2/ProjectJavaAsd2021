@@ -3,6 +3,7 @@ package mtd;
 import mnkgame.MNKCell;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -11,44 +12,17 @@ public class MnkGameSearcher {
     private Game game;
     private MnkGameEvaluator eval;
     private long nodes;
+    private int capacity;
+
+
 
     public MnkGameSearcher(Game game, MnkGameEvaluator eval) {
         this.game = game;
         this.eval = eval;
-    }
 
-    public void update(MNKCell mnkCell) {
-        game.update(mnkCell);
-    }
-
-    public record Task(MnkGameSearcher searcher, int depth) implements Callable<Result> {
-        @Override
-        public Result call() {
-            return searcher.search(depth, MnkGameEvaluator.MIN_SCORE - 1, MnkGameEvaluator.MAX_SCORE + 1);
-        }
-    }
-
-    public record Result(int score, List<Integer> pv, boolean proof) {
-
-        public List<Integer> getPrincipleVariation() {
-            return pv;
-        }
-
-        public int getScore() {
-            return score;
-        }
-
-        public int getPrincipleVariationLength() {
-            return pv.size();
-        }
-
-        public int getPrincipleVariationMove() {
-            return pv.get(0);
-        }
-
-        public boolean isProvenResult() {
-            return proof;
-        }
+        // FIXME: 30/01/2022 it's possible to have better capacity?
+        capacity = Integer.MAX_VALUE;
+        transpositionMap = new HashMap<>(capacity);
     }
 
     protected final void incrementNodeCount() {
@@ -75,7 +49,10 @@ public class MnkGameSearcher {
         return nodes;
     }
 
+/*
     private Result search(int depth, int alpha, int beta) {
+        // FIXME: 31/01/2022 this is pvs (principal variation search) it would be cool to implement it
+
 
         incrementNodeCount();
 
@@ -118,5 +95,5 @@ public class MnkGameSearcher {
         return new Result(score, pv, proof);
 
     }
-
+*/
 }
