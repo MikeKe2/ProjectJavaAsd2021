@@ -8,11 +8,12 @@ import java.util.concurrent.Callable;
 
 public class MnkGameSearcher {
 
-    public record Task(MnkGameSearcher searcher, MNKCell[] FC, int depth) implements Callable<Result> {
+    public record Task(MnkGameSearcher searcher, MNKCell[] FC, int depth, int alpha, int beta) implements Callable<Result> {
 
         @Override
-        public Result call() throws Exception {
-            return searcher.search(depth, FC, MnkGameEvaluator.MIN_SCORE - 1, MnkGameEvaluator.MAX_SCORE + 1);
+        public Result call() {
+            System.out.println(depth);
+            return searcher.search(depth, FC, alpha, beta);
         }
     }
 
@@ -22,7 +23,7 @@ public class MnkGameSearcher {
             return score;
         }
 
-        public List<MNKCell> getPrincipleVaration() {
+        public List<MNKCell> getPrincipleVariation() {
             return pv;
         }
 
@@ -58,15 +59,16 @@ public class MnkGameSearcher {
         if (depth <= 0)
             return new Result(getEvaluator().evaluate(), null, false);
 
-        boolean maxi = getGame().getCurrentPlayer() == MnkGameEvaluator.PLAYER_MAX;
+        boolean maxi = getGame().getCurrentPlayer() == 1;
 
         List<MNKCell> pv = new ArrayList<>(depth);
-
+        //System.out.println(depth);
         boolean proof = false;
         for (MNKCell move : FC) {
-            getGame().doMove(move, false);
+            //System.out.println(move);
+            getGame().doMove(move);
             Result result = search(depth - 1, FC, alpha, beta);
-            getGame().undoMove(true);
+            getGame().undoMove();
             if (Thread.currentThread().isInterrupted())
                 return null;
             int score = result.getScore();
@@ -78,15 +80,15 @@ public class MnkGameSearcher {
                     break;
                 pv.clear();
                 pv.add(move);
-                if (result.getPrincipleVaration() != null)
-                    pv.addAll(result.getPrincipleVaration());
+                if (result.getPrincipleVariation() != null)
+                    pv.addAll(result.getPrincipleVariation());
             }
         }
 
         int score = maxi ? alpha : beta;
-        if (score == MnkGameEvaluator.MIN_SCORE + depth - 1) {
+        if (score == Game.MIN_SCORE + depth - 1) {
             score++;
-        } else if (score == MnkGameEvaluator.MAX_SCORE - depth + 1) {
+        } else if (score == Game.MAX_SCORE - depth + 1) {
             score--;
         }
 
