@@ -23,35 +23,33 @@ public class MnkGameEvaluator {
         return score;
     }
 
-    protected int evaluate(MNKCellState[] line) {
+    protected int evaluate(int[] line) {
         int k = game.getK();
         if (line.length < k)
             return 0;
 
         int p1 = 0;
         int p2 = 0;
-
         for (int i = 0; i < k - 1; i++) {
-            if (line[i] == MNKCellState.P1) {
+            if (line[i] == Game.PLAYER_1) {
                 p1++;
-            } else if (line[i] == MNKCellState.P2) {
+            } else if (line[i] == Game.PLAYER_2) {
                 p2++;
             }
         }
-
         int[] p1Score = new int[line.length - k + 1];
         int[] p2Score = new int[line.length - k + 1];
         for (int i = 0; i < p1Score.length; i++) {
-            if (line[i + k - 1] == MNKCellState.P1) {
+            if (line[i + k - 1] == Game.PLAYER_1) {
                 p1++;
-            } else if (line[i + k - 1] == MNKCellState.P2) {
+            } else if (line[i + k - 1] == Game.PLAYER_2) {
                 p2++;
             }
             p1Score[i] = (p2 <= 0) ? (1 << p1) - 1 : 0;
             p2Score[i] = (p1 <= 0) ? (1 << p2) - 1 : 0;
-            if (line[i] == MNKCellState.P1) {
+            if (line[i] == Game.PLAYER_1) {
                 p1--;
-            } else if (line[i] == MNKCellState.P2) {
+            } else if (line[i] == Game.PLAYER_2) {
                 p2--;
             }
         }

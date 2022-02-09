@@ -1,11 +1,9 @@
 package pvs;
 
 import mnkgame.MNKCell;
-import mnkgame.MNKCellState;
-import mnkgame.MNKGameState;
 
-import java.util.Arrays;
-import java.util.Stack;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class Game {
 
@@ -13,131 +11,83 @@ public class Game {
     public static final int DRAW_SCORE = 0;
     public static final int MIN_SCORE = Integer.MIN_VALUE;
 
-    final private int ALPHAP1;
-    final private int BETAP1;
-    final private int ALPHAP2;
-    final private int BETAP2;
-
-    /**
-     * Constant representing empty spaces, i.e. "no" player.
-     */
+    // Constant representing empty spaces, i.e. "no" player.
     public static final int PLAYER_NONE = 0;
-    /**
-     * Constant representing the first player.
-     */
+    // Constant representing the first player.
     public static final int PLAYER_1 = 1;
-    /**
-     * Constant representing the second player.
-     */
+    // Constant representing the second player.
     public static final int PLAYER_2 = -PLAYER_1;
 
+
     // Instance variables
-    private final int M, N, K, size; // M = cols, N = rows, K = win-in a row, size = N * M
-    private final MNKCellState[][] board; // M x N grid as 2D array
-    private final Stack<MNKCell> history = new Stack<>(); // past piece placements
+    private final int columns, rows, K, size; // columns = cols, rows = rows, K = win-in a row, size = rows * columns
+    private final int[] board; // columns x rows grid as 2D array
+    private final int[] history; // past piece placements
 
     private int ply; // number of past piece placements
     private int turn; // current player, winning player (if any)
-    private MNKGameState winner;
+    private int winner;
 
-    public Game(int M, int N, int K) {
-
-        this.M = M;
-        this.N = N;
+    public Game(int row, int column, int K) {
+        this.columns = column;
+        this.rows = row;
         this.K = K;
         this.turn = PLAYER_1;
-        this.size = M * N;
+        this.size = columns * rows;
 
-        ALPHAP1 = MIN_SCORE;
-        BETAP2 = MAX_SCORE;
-        Integer tgv = theoreticalGameValue();
-        BETAP1 = tgv == null ? MAX_SCORE : tgv;
-        // no m,n,k-game has theoreticalGameValue() == LOSSUTILITY anyway
-        ALPHAP2 = BETAP1 == MAX_SCORE ? MIN_SCORE : DRAW_SCORE;
+        history = new int[size];
+        board = new int[size];
 
-        board = resetBoardState();
-        winner = MNKGameState.OPEN;
+        winner = PLAYER_NONE;
         ply = 0;
     }
 
-    private MNKCellState[][] resetBoardState() {
-        MNKCellState[][] res = new MNKCellState[M][N];
-        for (MNKCellState[] row : res)
-            Arrays.fill(row, MNKCellState.FREE);
-        return res;
-    }
-
-    public Game update(MNKCell mnkCell) {
-        final int row = mnkCell.i;
-        final int column = mnkCell.j;
-
-        board[row][column] = turn == 0 ? MNKCellState.P1 : MNKCellState.P2;
-        history.push(mnkCell);
-
-        if (winner == MNKGameState.OPEN && history.size() == size)
-            winner = MNKGameState.DRAW;
-
-        return this;
-    }
-
-    protected Integer theoreticalGameValue() {
-        if (K == 1)
-            return MAX_SCORE;
-        if (K == 2)
-            return size > 2 ? MAX_SCORE : DRAW_SCORE;
-        if (K == 3)
-            return M >= 4 && N >= 3 || M >= 3 && N >= 4 ? MAX_SCORE : DRAW_SCORE;
-        if (K == 4) {
-            if (M <= 8 && N == 4 || M == 4 && N <= 8 || M == 5 && N == 5)
-                return DRAW_SCORE;
-            if (M >= 6 && N >= 5 || M >= 5 && N >= 6 || M == 4 && N >= 30 || M >= 30 && N == 4)
-                return MAX_SCORE;
-        }
-        if (K == 5) {
-            if (M <= 6 && N <= 6)
-                return DRAW_SCORE;
-            if (M == 19 && N == 19)
-                return MAX_SCORE;
-        }
-        if (K >= 8)
-            return DRAW_SCORE;
-        return null;
-    }
-
-    public int initialAlpha(boolean p) {
-        return history.empty() ? p ? ALPHAP1 : ALPHAP2 : MIN_SCORE;
-    }
-
-    public int initialBeta(boolean p) {
-        return history.empty() ? p ? BETAP1 : BETAP2 : MAX_SCORE;
-    }
-
     public int maxDepth() {
-        return size - history.size();
+        return size - ply;
+    }
+
+    public int getSquare(int row, int col) {
+        return row * rows + col;
+    }
+
+    public int getSquares() {
+        return columns * rows;
+    }
+
+    public int getRow(int square) {
+        return square / columns;
+    }
+
+    public int getCol(int square) {
+        return square % columns;
     }
 
     public void doMove(MNKCell move) {
-        board[move.i][move.j] = turn == PLAYER_1 ? MNKCellState.P1 : MNKCellState.P2;
-        history.push(move);
-        ply++;
-        winner = calculateWinner(move);
+        System.out.println("Row: " + move.i + " Column: " + move.j);
+        doMove(getSquare(move.i, move.j));
+    }
+
+    public void doMove(int square) {
+        board[square] = turn;
+        history[ply++] = square;
+        winner = calculateWinner(square);
         turn = -turn;
     }
 
     public void undoMove() {
-        MNKCell move = history.pop();
+        int index = history[ply - 1];
         turn = -turn;
-        winner = MNKGameState.OPEN;
+        winner = PLAYER_NONE;
         ply--;
-        board[move.i][move.j] = MNKCellState.FREE;
+        board[index] = PLAYER_NONE;
     }
 
     public int getCols() {
-        return M;
+        return columns;
     }
 
     public int getRows() {
-        return N;
+        return rows;
     }
 
     public int getK() {
@@ -145,45 +95,49 @@ public class Game {
     }
 
     public int getDiagonals() {
-        return M + N - 1;
+        return columns + rows - 1;
     }
 
     public int getAntiDiagonals() {
         return getDiagonals();
     }
 
-    public MNKCellState[] getRowSquares(int row) {
-        MNKCellState[] list = new MNKCellState[M];
-        for (int col = 0; col < M; col++)
-            list[col] = board[row][col];
+    public int[] getRowSquares(int row) {
+        int[] list = new int[columns];
+        for (int col = 0; col < columns; col++)
+            list[col] = board[getSquare(row, col)];
         return list;
     }
 
-    public MNKCellState[] getColSquares(int col) {
-        MNKCellState[] list = new MNKCellState[N];
-        for (int row = 0; row < N; row++)
-            list[row] = board[row][col];
+    public int[] getColSquares(int col) {
+        int[] list = new int[rows];
+        for (int row = 0; row < rows; row++)
+            list[row] = board[getSquare(row, col)];
         return list;
     }
 
     // FIXME: 08/02/2022 
-    public MNKCellState[] getDiagonalSquares(int diag) {
-        MNKCellState[] list = new MNKCellState[getDiagonalSize(diag)];
-        int startRow = Math.max(N - 1 - diag, 0);
-        int startCol = Math.max(diag - N, 0);
+    public int[] getDiagonalSquares(int diag) {
+        int[] list = new int[getDiagonalSize(diag)];
+        int startRow = Math.max(rows - 1 - diag, 0);
+        int startCol = Math.max(diag - rows, 0);
+        int square = getSquare(startRow, startCol);
         for (int i = 0; i < list.length; i++) {
-            list[i] = board[startRow][startCol];
+            list[i] = square;
+            square += columns + 1;
         }
         return list;
     }
 
     // FIXME: 08/02/2022
-    public MNKCellState[] getAntiDiagonalSquares(int diag) {
-        MNKCellState[] list = new MNKCellState[getAntiDiagonalSize(diag)];
-        int startRow = Math.max(diag - M, 0);
-        int startCol = Math.min(diag, M - 1);
+    public int[] getAntiDiagonalSquares(int diag) {
+        int[] list = new int[getAntiDiagonalSize(diag)];
+        int startRow = Math.max(diag - columns, 0);
+        int startCol = Math.min(diag, columns - 1);
+        int square = getSquare(startRow, startCol);
         for (int i = 0; i < list.length; i++) {
-            list[i] = board[startRow][startCol];
+            list[i] = square;
+            square += columns - 1;
         }
         return list;
     }
@@ -193,7 +147,7 @@ public class Game {
     }
 
     public int getAntiDiagonalSize(int diag) {
-        return min(N + M - 1 - diag, diag + 1, N, M);
+        return min(rows + columns - 1 - diag, diag + 1, rows, columns);
     }
 
     private int min(int i0, int i1, int i2, int i3) {
@@ -201,11 +155,25 @@ public class Game {
     }
 
     public boolean hasWinner() {
-        return winner != MNKGameState.OPEN && winner != MNKGameState.DRAW;
+        return winner != PLAYER_NONE;
     }
 
     public boolean isGameOver() {
-        return hasWinner() || history.size() == size;
+        return hasWinner() || ply == size;
+    }
+
+    public int getElapsedPly() {
+        return ply;
+    }
+
+    public int getHistory(int ply) {
+        if (ply < 0 || ply >= history.length)
+            throw new IllegalArgumentException("Illegal history move access.");
+        return history[ply];
+    }
+
+    public int getPseudolegalMoves() {
+        return getSquares() - getElapsedPly();
     }
 
     public int getCurrentPlayer() {
@@ -214,43 +182,47 @@ public class Game {
 
     // Private methods
     /* Checks if there is K-in-a-row through the square. */
-    private MNKGameState calculateWinner(MNKCell cell) {
-        MNKCellState s = cell.state;
-        int i = cell.i;
-        int j = cell.j;
-        int n;
+    private int calculateWinner(int square) {
+        int row = getRow(square);
+        int col = getCol(square);
+        int[][] dirs = {{-1, 1}, {-columns, columns}, {-columns - 1, columns + 1}, {-columns + 1, columns - 1}};
+        int[][] lens = {{col, columns - 1 - col}, {row, rows - 1 - row},
+                {Math.min(col, row), Math.min(columns - 1 - col, rows - 1 - row)},
+                {Math.min(columns - 1 - col, row), Math.min(col, rows - 1 - row)}};
+        for (int i0 = 0; i0 < 4; i0++) {
+            int consecutive = 1;
+            for (int i1 = 0; i1 < 2; i1++) {
+                for (int index = square, j = 0; j < lens[i0][i1]; j++) {
+                    if (board[(index += dirs[i0][i1])] != turn)
+                        break;
+                    if (++consecutive >= K)
+                        return turn;
+                }
+            }
+        }
+        return PLAYER_NONE;
+    }
 
-        // Useless pedantic check
-        if (s == MNKCellState.FREE) return MNKGameState.OPEN;
+    public Iterable<Integer> generateMoves() {
+        return () -> new Iterator<>() {
+            int index = 0;
 
-        // Horizontal check
-        n = 1;
-        for (int k = 1; j - k >= 0 && board[i][j - k] == s; k++) n++; // backward check
-        for (int k = 1; j + k < N && board[i][j + k] == s; k++) n++; // forward check
-        if (n >= K) return turn == PLAYER_1 ? MNKGameState.WINP1 : MNKGameState.WINP2;
+            @Override
+            public boolean hasNext() {
+                while (index < rows * columns) {
+                    if (board[index] == PLAYER_NONE)
+                        return true;
+                    index++;
+                }
+                return false;
+            }
 
-
-        // Vertical check
-        n = 1;
-        for (int k = 1; i - k >= 0 && board[i - k][j] == s; k++) n++; // backward check
-        for (int k = 1; i + k < M && board[i + k][j] == s; k++) n++; // forward check
-        if (n >= K) return turn == PLAYER_1 ? MNKGameState.WINP1 : MNKGameState.WINP2;
-
-
-        // Diagonal check
-        n = 1;
-        for (int k = 1; i - k >= 0 && j - k >= 0 && board[i - k][j - k] == s; k++) n++; // backward check
-        for (int k = 1; i + k < M && j + k < N && board[i + k][j + k] == s; k++) n++; // forward check
-        if (n >= K) return turn == PLAYER_1 ? MNKGameState.WINP1 : MNKGameState.WINP2;
-
-
-        // Anti-diagonal check
-        n = 1;
-        for (int k = 1; i - k >= 0 && j + k < N && board[i - k][j + k] == s; k++) n++; // backward check
-        for (int k = 1; i + k < M && j - k >= 0 && board[i + k][j - k] == s; k++) n++; // backward check
-        if (n >= K) return turn == PLAYER_1 ? MNKGameState.WINP1 : MNKGameState.WINP2;
-
-
-        return MNKGameState.OPEN;
+            @Override
+            public Integer next() {
+                if (!hasNext())
+                    throw new NoSuchElementException();
+                return index++;
+            }
+        };
     }
 }
