@@ -7,9 +7,8 @@ import java.util.NoSuchElementException;
 
 public class Game {
 
-    public static final int MAX_SCORE = Integer.MAX_VALUE;
-    public static final int DRAW_SCORE = 0;
-    public static final int MIN_SCORE = Integer.MIN_VALUE;
+    public static final int MAX_SCORE = 1 << 30;
+    public static final int MIN_SCORE = -MAX_SCORE;
 
     // Constant representing empty spaces, i.e. "no" player.
     public static final int PLAYER_NONE = 0;
@@ -29,9 +28,10 @@ public class Game {
     private int winner;
 
     public Game(int row, int column, int K) {
-        this.columns = column;
         this.rows = row;
+        this.columns = column;
         this.K = K;
+
         this.turn = PLAYER_1;
         this.size = columns * rows;
 
@@ -51,7 +51,7 @@ public class Game {
     }
 
     public int getSquares() {
-        return columns * rows;
+        return size;
     }
 
     public int getRow(int square) {
@@ -63,7 +63,6 @@ public class Game {
     }
 
     public void doMove(MNKCell move) {
-        System.out.println("Row: " + move.i + " Column: " + move.j);
         doMove(getSquare(move.i, move.j));
     }
 
@@ -116,7 +115,7 @@ public class Game {
         return list;
     }
 
-    // FIXME: 08/02/2022 
+    //TODO:little bug inside here, it needs to be fixed asap
     public int[] getDiagonalSquares(int diag) {
         int[] list = new int[getDiagonalSize(diag)];
         int startRow = Math.max(rows - 1 - diag, 0);
@@ -128,8 +127,7 @@ public class Game {
         }
         return list;
     }
-
-    // FIXME: 08/02/2022
+    //TODO:same as top one
     public int[] getAntiDiagonalSquares(int diag) {
         int[] list = new int[getAntiDiagonalSize(diag)];
         int startRow = Math.max(diag - columns, 0);
@@ -172,8 +170,8 @@ public class Game {
         return history[ply];
     }
 
-    public int getPseudolegalMoves() {
-        return getSquares() - getElapsedPly();
+    public int getPseudoLegalMoves() {
+        return size - ply;
     }
 
     public int getCurrentPlayer() {

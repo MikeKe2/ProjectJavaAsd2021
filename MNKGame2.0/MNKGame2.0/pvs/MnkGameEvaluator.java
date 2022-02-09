@@ -1,7 +1,5 @@
 package pvs;
 
-import mnkgame.MNKCellState;
-
 public class MnkGameEvaluator {
 
     private Game game;

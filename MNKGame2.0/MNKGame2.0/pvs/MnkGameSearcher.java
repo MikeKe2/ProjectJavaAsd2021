@@ -1,7 +1,5 @@
 package pvs;
 
-import mnkgame.MNKCell;
-
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -26,10 +24,6 @@ public class MnkGameSearcher {
 
         public int getPrincipleVariationMove() {
             return pv.get(0);
-        }
-
-        public int getPrincipleVariationLength() {
-            return pv.size();
         }
 
         public boolean isProvenResult() {
@@ -84,7 +78,7 @@ public class MnkGameSearcher {
     }
 
     protected int numMoves() {
-        return getGame().getPseudolegalMoves();
+        return getGame().getPseudoLegalMoves();
     }
 
     public Result search(int depth, int alpha, int beta) {
@@ -179,4 +173,5 @@ public class MnkGameSearcher {
             }
         }
     }
+
 }
