@@ -26,6 +26,7 @@ public class Game {
     private int ply; // number of past piece placements
     private int turn; // current player, winning player (if any)
     private int winner;
+    private int itemsInDiagonal;
 
     public Game(int row, int column, int K) {
         this.rows = row;
@@ -79,10 +80,11 @@ public class Game {
     }
 
     public void playMove(MNKCell move) {
-        int play = getMove(move.i, move.j);
-        //playMove(getMove(move.i, move.j));
-        board[play] = turn;
-        history[ply++] = play;
+
+        playMove(getMove(move.i, move.j));
+        printRightToLeftDiagonal(0);
+        //System.out.println();
+        //check();
     }
 
     public void playMove(int move) {
@@ -114,8 +116,12 @@ public class Game {
         return list;
     }
 
+    /**
+     * Get numbers of diagonals
+     */
     public int getDiagonals() {
-        return columns + rows - 1;
+        int[][] board = getBoard();
+        return board.length + board.length - 1;
     }
 
     public int getDiagonalSize(int diag) {
@@ -126,30 +132,82 @@ public class Game {
         return Math.min(Math.min(i0, i1), Math.min(i2, i3));
     }
 
-    public int[] getDiagonalSquares(int diag) {
-        int[] list = new int[getDiagonalSize(diag)];
-        int startCol = Math.max(rows - 1 - diag, 0);
-        int startRow = Math.max(diag - rows, 0);
-        int move = getMove(startRow, startCol);
-        for (int i = 0; i < list.length; i++) {
-            list[i] = move;
-            //System.out.println("Diagonal: " + diag + "\t Move: " + move + "\t Cells: " + getRow(move) + "-" + getCol(move));
-            move += columns + 1;
+    public void resetItemsInDiagonal() {
+        itemsInDiagonal = 0;
+    }
+
+    public int[] getDiagonalSquares(int diag, int midpoint) {
+        int[] list = new int[getDiagonalSize(diag - 1)];
+        int[][] board = getBoard();
+        int rowIndex;
+        int columnIndex;
+        if (diag <= midpoint) {
+            itemsInDiagonal++;
+            for (int j = 0; j < itemsInDiagonal; j++) {
+                rowIndex = (diag - j) - 1;
+                columnIndex = j;
+                list[j] = board[rowIndex][columnIndex];
+            }
+        } else {
+            itemsInDiagonal--;
+            for (int j = 0; j < itemsInDiagonal; j++) {
+                rowIndex = (board.length - 1) - j;
+                columnIndex = (diag - board.length) + j;
+                list[j] = board[rowIndex][columnIndex];
+            }
         }
         return list;
     }
 
-    public int[] getAntiDiagonalSquares(int diag) {
+    public void check() {
+        int[][] B = getBoard();
+        System.out.println();
+        System.out.println("----------------------------------------");
+        System.out.println(B[0][0] + "\t" + B[0][1] + "\t" + B[0][2]);
+        System.out.println(B[1][0] + "\t" + B[1][1] + "\t" + B[1][2]);
+        System.out.println(B[2][0] + "\t" + B[2][1] + "\t" + B[2][2]);
+        System.out.println("Turn" + turn);
+    }
+
+    public int[] getAntiDiagonalSquares(int diag, int midpoint) {
+
         int[] list = new int[getDiagonalSize(diag)];
         int startRow = Math.max(diag - columns, 0);
         int startCol = Math.min(diag, columns - 1);
         int move = getMove(startRow, startCol);
         for (int i = 0; i < list.length; i++) {
+            //System.out.println("Diagonal: "+ diag + "\t diagonale size: " + list.length +"\t "+ i + ": element\t Move: " + move);
             list[i] = move;
             move += columns - 1;
         }
         return list;
     }
+
+    //example for matrix[2, 2] it will print 9 5 1
+    private static void printReverseDiagonal(int[][] matrix, int i, int j) {
+        System.out.print(matrix[i][j]);
+        for (int row = i - 1, column = j - 1; row >= 0 && column >= 0; --row, --column) {
+            System.out.print(" " + matrix[row][column]);
+        }
+        System.out.println();
+    }
+
+
+    public void printRightToLeftDiagonal(int diag) {
+        int[][] board = getBoard();
+        int n = board.length;
+
+        int j = n - 1;
+        for (int i = 0; i < n; ++i) {
+            printReverseDiagonal(board, i, j);
+        }
+
+        int i = n - 1;
+        for (j = n - 2; j >= 0; --j) {
+            printReverseDiagonal(board, i, j);
+        }
+    }
+
 
     public int getWinner() {
         return winner;

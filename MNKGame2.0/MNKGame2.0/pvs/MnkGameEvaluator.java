@@ -9,16 +9,23 @@ public class MnkGameEvaluator {
     }
 
     public int evaluate() {
-
         int score = 0;
+
         for (int row = 0; row < game.getRows(); row++)
             score += evaluate(game.getCellsForRow(row));
         for (int col = 0; col < game.getCols(); col++)
             score += evaluate(game.getCellsForColumns(col));
-        for (int diag = 0; diag < game.getDiagonals(); diag++)
-            score += evaluate(game.getDiagonalSquares(diag));
-        for (int diag = 0; diag < game.getDiagonals(); diag++)
-            score += evaluate(game.getAntiDiagonalSquares(diag));
+
+        int midpoint = (game.getDiagonals() / 2) + 1;
+        game.resetItemsInDiagonal();
+
+        for (int diag = 1; diag <= game.getDiagonals(); diag++)
+            score += evaluate(game.getDiagonalSquares(diag, midpoint));
+
+        int n = game.getDiagonals();
+        for (int diag = 0; diag <= game.getDiagonals(); diag++) {
+            score += evaluate(game.getAntiDiagonalSquares(diag, midpoint));
+        }
         return score;
 
     }
@@ -36,8 +43,10 @@ public class MnkGameEvaluator {
         //Check how many squares inside the line are occupied by the players
         for (int i = 0; i < k - 1; i++) {
             if (line[i] == Game.PLAYER_1) {
+                //System.out.println("Line " + line.length + "\t Player 1 move " + game.getRow(line[i]) + " - " + game.getCol(line[i]));
                 p1++;
             } else if (line[i] == Game.PLAYER_2) {
+                //System.out.println("Line " + line.length + "\t Player 2 move " + game.getRow(line[i]) + " - " + game.getCol(line[i]));
                 p2++;
             }
         }
