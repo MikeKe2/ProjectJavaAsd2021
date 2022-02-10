@@ -42,7 +42,6 @@ public class MnkGameSearcher {
     private long nodes;
     private long startTime;
     final private long timeLimit;
-    private int score;
 
     public MnkGameSearcher(Game game, MnkGameEvaluator eval, long timeLimit) {
         this.game = game;
@@ -71,30 +70,26 @@ public class MnkGameSearcher {
         nodes++;
     }
 
-    public final long getNodeCount() {
-        return nodes;
-    }
-
     protected int numMoves() {
         return getGame().getRemainingMoves();
     }
 
     public int iterativeDeepening() {
-        printSearchResultHeader();
         startTime = System.currentTimeMillis();
         MnkGameSearcher.Result result = null;
         int depth = game.maxDepth();
         int move = 0;
+
         for (int i = 1; i <= depth; i++) {
             try {
                 result = search(i, Game.MIN_SCORE, Game.MAX_SCORE);
                 move = result.getPrincipleVariationMove();
-                //printSearchResult(result, i, System.currentTimeMillis() - timeStart, searcher.getNodeCount() - nodesStart);
                 if (result.isProvenResult())
                     break;
             } catch (TimeoutException ex) {
-                printSearchResult(result, depth, timeLimit, nodes);
-                move = result.pv() != null ? result.getPrincipleVariationMove() : generateRandomMove();
+                System.out.println("ERRORE QUI");
+                assert result != null;
+                    move = result.getPrincipleVariationMove() < 0 ? result.getPrincipleVariationMove() : generateRandomMove();
             }
         }
         return move;
@@ -131,36 +126,10 @@ public class MnkGameSearcher {
         System.out.println();
     }
 
-    private int Quiesce(int alpha, int beta) {
-        try {
-            int bestVal = getEvaluator().evaluate();
-            if (bestVal >= beta)
-                return beta;
-            if (alpha < bestVal)
-                alpha = bestVal;
-
-            for (int move : generateMoves()) {
-                getGame().playMove(move);
-                score = -Quiesce(-beta, -alpha);
-                getGame().unplayMove();
-
-                if (score >= beta)
-                    return beta;
-                if (score > alpha)
-                    alpha = score;
-            }
-
-            return bestVal;
-        } catch (Exception e) {
-            System.out.println("Something went wrong.");
-            return 0;
-        }
-    }
-
-
     public Result search(int depth, int alpha, int beta) throws TimeoutException {
         incrementNodeCount();
         timeCheck();
+
         if (getGame().isGameOver())
             return new Result(getEvaluator().evaluate(), null, true);
         if (depth <= 0)
@@ -170,9 +139,7 @@ public class MnkGameSearcher {
 
         List<Integer> pv = new ArrayList<>(depth);
         boolean proof = false;
-
         for (int move : generateMoves()) {
-
             timeCheck();
             getGame().playMove(move);
             Result result = search(depth - 1, alpha, beta);
@@ -204,8 +171,8 @@ public class MnkGameSearcher {
         }
 
         return new Result(score, pv, proof);
-
     }
+
 
     protected Iterable<Integer> generateMoves() {
         updateWeights();
@@ -213,7 +180,9 @@ public class MnkGameSearcher {
         Comparator<WeightedMove> comp = (m1, m2) -> {
             return m2.score - m1.score; // reverse
         };
+
         PriorityQueue<WeightedMove> moves = new PriorityQueue<>(numMoves(), comp);
+
         for (Integer move : game.generateMoves())
             moves.add(new WeightedMove(move, weights[move]));
 
@@ -256,7 +225,6 @@ public class MnkGameSearcher {
     }
 
     protected void timeCheck() throws TimeoutException {
-        float RELAXATION = 0.94f;
         if (System.currentTimeMillis() - startTime > timeLimit)
             throw new TimeoutException();
     }
@@ -264,13 +232,10 @@ public class MnkGameSearcher {
     private int generateRandomMove() {
         Random rand = new Random();
 
-        int i = 0;
         for (int move : game.generateMoves()) {
             if (rand.nextInt(game.getSize() - 1) == 0)
                 return move;
-            i++;
         }
-
         throw new IllegalStateException("Failed to generate move.");
     }
 

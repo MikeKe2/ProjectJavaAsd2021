@@ -9,12 +9,6 @@ public class MnkGameEvaluator {
     }
 
     public int evaluate() {
-        /*int winner = game.getWinner();
-        return switch (winner) {
-            case Game.PLAYER_1 -> Game.MAX_SCORE;
-            case Game.PLAYER_2 -> Game.MIN_SCORE;
-            default -> 0;
-        };*/
 
         int score = 0;
         for (int row = 0; row < game.getRows(); row++)

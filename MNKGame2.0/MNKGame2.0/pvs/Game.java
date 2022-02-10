@@ -79,13 +79,16 @@ public class Game {
     }
 
     public void playMove(MNKCell move) {
-        playMove(getMove(move.i, move.j));
+        int play = getMove(move.i, move.j);
+        //playMove(getMove(move.i, move.j));
+        board[play] = turn;
+        history[ply++] = play;
     }
 
     public void playMove(int move) {
         board[move] = turn;
         history[ply++] = move;
-        winner = calculateWinner(move);
+        winner = isWinningCell(getRow(move), getCol(move));
         turn = -turn;
     }
 
@@ -165,31 +168,57 @@ public class Game {
         return history[ply];
     }
 
+    public int[][] getBoard() {
+        int[][] board2d = new int[rows][columns];
+        for (int row = 0; row < rows; row++)
+            for (int col = 0; col < columns; col++)
+                board2d[row][col] = board[getMove(row, col)];
+        return board2d;
+    }
+
+    private int isWinningCell(int i, int j) {
+        int[][] B = getBoard();
+        int s = B[i][j];
+        int n;
+
+        // Useless pedantic check
+        if (s == PLAYER_NONE) return PLAYER_NONE;
+
+        // Horizontal check
+        n = 1;
+        for (int k = 1; j - k >= 0 && B[i][j - k] == s; k++) n++; // backward check
+        for (int k = 1; j + k < rows && B[i][j + k] == s; k++) n++; // forward check
+        if (n >= K) return turn;
+
+        // Vertical check
+        n = 1;
+        for (int k = 1; i - k >= 0 && B[i - k][j] == s; k++) n++; // backward check
+        for (int k = 1; i + k < columns && B[i + k][j] == s; k++) n++; // forward check
+        if (n >= K) return turn;
+
+
+        // Diagonal check
+        n = 1;
+        for (int k = 1; i - k >= 0 && j - k >= 0 && B[i - k][j - k] == s; k++) n++; // backward check
+        for (int k = 1; i + k < columns && j + k < rows && B[i + k][j + k] == s; k++) n++; // forward check
+        if (n >= K) return turn;
+
+        // Anti-diagonal check
+        n = 1;
+        for (int k = 1; i - k >= 0 && j + k < rows && B[i - k][j + k] == s; k++) n++; // backward check
+        for (int k = 1; i + k < columns && j - k >= 0 && B[i + k][j - k] == s; k++) n++; // backward check
+        if (n >= K) return turn;
+
+        return PLAYER_NONE;
+    }
+
+
     public int getRemainingMoves() {
         return size - ply;
     }
 
     public int getCurrentPlayer() {
         return turn;
-    }
-
-    // Private methods
-    /* Checks if there is K-in-a-row through the move. */
-    private int calculateWinner(int move) {
-        int row = getRow(move);
-        int col = getCol(move);
-        int[][] dirs = {{-1, 1}, {-columns, columns}, {-columns - 1, columns + 1}, {-columns + 1, columns - 1}};
-        int[][] lens = {{col, columns - 1 - col}, {row, rows - 1 - row}, {Math.min(col, row), Math.min(columns - 1 - col, rows - 1 - row)}, {Math.min(columns - 1 - col, row), Math.min(col, rows - 1 - row)}};
-        for (int i0 = 0; i0 < 4; i0++) {
-            int consecutive = 1;
-            for (int i1 = 0; i1 < 2; i1++) {
-                for (int index = move, j = 0; j < lens[i0][i1]; j++) {
-                    if (board[(index += dirs[i0][i1])] != turn) break;
-                    if (++consecutive >= K) return turn;
-                }
-            }
-        }
-        return PLAYER_NONE;
     }
 
     public Iterable<Integer> generateMoves() {
