@@ -145,9 +145,12 @@ public class MnkGameSearcher {
             Result result = search(depth - 1, alpha, beta);
             getGame().unplayMove();
 
-            if (Thread.currentThread().isInterrupted())
-                return null;
             int score = result.getScore();
+
+            if (Thread.currentThread().isInterrupted()) {
+                return new Result(score, pv, proof);
+                //return null;
+            }
             timeCheck();
             if (maxi ? score > alpha : score < beta) {
                 if (maxi) alpha = score;
