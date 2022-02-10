@@ -22,10 +22,10 @@ public class MnkGameEvaluator {
         for (int diag = 1; diag <= game.getDiagonals(); diag++)
             score += evaluate(game.getDiagonalSquares(diag, midpoint));
 
-        int n = game.getDiagonals();
-        for (int diag = 0; diag <= game.getDiagonals(); diag++) {
-            score += evaluate(game.getAntiDiagonalSquares(diag, midpoint));
-        }
+
+        for (int diag = 1; diag <= game.getDiagonals(); diag++)
+            score += evaluate(game.getAntiDiagonalSquares(diag));
+
         return score;
 
     }
