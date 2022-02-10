@@ -2,31 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a140647c-f43a-4cc3-8155-be149ad1520b" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/mtd/TwoDeepTT.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/mtd/ZobristHashing.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/Game.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/MnkGameEvaluator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/MnkGameSearcher.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/MtdAiPVS.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mnk-game-ai-master.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/mnk-game-ai-master/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/mnk-game-ai-master/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/mnk-game-ai-master/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/mnk-game-ai-master/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/out/production/mnk-game-ai-master/mnk-game-ai-master.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Artificial Intelligence A Modern Approach 3rd Edition.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/../Artificial Intelligence.pdf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/mtd/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/mtd/Game.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/mtd/MnkGameEvaluator.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/mtd/MnkGameEvaluator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/mtd/MnkGameSearcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/mtd/MnkGameSearcher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/mtd/MtdAi.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/mtd/MtdAi.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../monke/src/monkey/mnk/ZobristHasher.java" beforeDir="false" afterPath="$PROJECT_DIR$/../monke/src/monkey/mnk/ZobristHasher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/AiPvs.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/AiPvs.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/Game.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/Game.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/MnkGameEvaluator.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/MnkGameEvaluator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/MnkGameSearcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MNKGame2.0/MNKGame2.0/pvs/MnkGameSearcher.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

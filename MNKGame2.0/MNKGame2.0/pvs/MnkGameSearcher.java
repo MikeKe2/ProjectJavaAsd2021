@@ -1,16 +1,9 @@
 package pvs;
 
 import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.concurrent.TimeoutException;
 
 public class MnkGameSearcher {
-
-    public record Task(MnkGameSearcher searcher, int depth) implements Callable<Result> {
-        @Override
-        public Result call() {
-            return searcher.search(depth, Game.MIN_SCORE, Game.MAX_SCORE);
-        }
-    }
 
     public record Result(int score, List<Integer> pv, boolean proof) {
 
@@ -29,6 +22,7 @@ public class MnkGameSearcher {
         public boolean isProvenResult() {
             return proof;
         }
+
     }
 
     private static class WeightedMove {
@@ -46,11 +40,15 @@ public class MnkGameSearcher {
     protected int[] weights;
     private int lastPly;
     private long nodes;
+    private long startTime;
+    final private long timeLimit;
+    private int score;
 
-    public MnkGameSearcher(Game game, MnkGameEvaluator eval) {
+    public MnkGameSearcher(Game game, MnkGameEvaluator eval, long timeLimit) {
         this.game = game;
         this.eval = eval;
-        this.weights = new int[game.getSquares()];
+        this.timeLimit = timeLimit;
+        this.weights = new int[game.getSize()];
         for (int i = 0; i < weights.length; i++) {
             int top = game.getRow(i);
             int bottom = game.getRows() - 1 - top;
@@ -58,7 +56,7 @@ public class MnkGameSearcher {
             int right = game.getCols() - 1 - left;
             weights[i] = Math.min(Math.min(top, bottom), Math.min(left, right));
         }
-        lastPly = 0;
+        this.lastPly = 0;
     }
 
     public final Game getGame() {
@@ -78,12 +76,91 @@ public class MnkGameSearcher {
     }
 
     protected int numMoves() {
-        return getGame().getPseudoLegalMoves();
+        return getGame().getRemainingMoves();
     }
 
-    public Result search(int depth, int alpha, int beta) {
-        incrementNodeCount();
+    public int iterativeDeepening() {
+        printSearchResultHeader();
+        startTime = System.currentTimeMillis();
+        MnkGameSearcher.Result result = null;
+        int depth = game.maxDepth();
+        int move = 0;
+        for (int i = 1; i <= depth; i++) {
+            try {
+                result = search(i, Game.MIN_SCORE, Game.MAX_SCORE);
+                move = result.getPrincipleVariationMove();
+                //printSearchResult(result, i, System.currentTimeMillis() - timeStart, searcher.getNodeCount() - nodesStart);
+                if (result.isProvenResult())
+                    break;
+            } catch (TimeoutException ex) {
+                printSearchResult(result, depth, timeLimit, nodes);
+                move = result.pv() != null ? result.getPrincipleVariationMove() : generateRandomMove();
+            }
+        }
+        return move;
+    }
 
+    private void printSearchResultHeader() {
+        System.out.println("Depth\tTime\tNodes\tScore\tVariation");
+    }
+
+
+    private void printSearchResult(MnkGameSearcher.Result r, int d, long t, long n) {
+        System.out.printf("%d\t\t", d);
+        System.out.printf("%.3f\t\t", t / 1000.0);
+        System.out.printf("%d\t\t", n);
+        if (r.isProvenResult()) {
+            String result;
+            int distance;
+            if (r.getScore() != 0) {
+                result = "win";
+                distance = Math.abs(Math.abs(r.getScore()));
+            } else {
+                result = "draw";
+                distance = game.getRemainingMoves(); // remaining turns left
+            }
+            System.out.printf("%s-%d\t\t", result, distance);
+        } else {
+            System.out.printf("%d\t\t", r.getScore());
+        }
+        for (int move : r.getPrincipleVariation()) {
+            int row = game.getRow(move);
+            int col = game.getCol(move);
+            System.out.print(row + "," + col + " ");
+        }
+        System.out.println();
+    }
+
+    private int Quiesce(int alpha, int beta) {
+        try {
+            int bestVal = getEvaluator().evaluate();
+            if (bestVal >= beta)
+                return beta;
+            if (alpha < bestVal)
+                alpha = bestVal;
+
+            for (int move : generateMoves()) {
+                getGame().playMove(move);
+                score = -Quiesce(-beta, -alpha);
+                getGame().unplayMove();
+
+                if (score >= beta)
+                    return beta;
+                if (score > alpha)
+                    alpha = score;
+            }
+
+            return bestVal;
+        } catch (Exception e) {
+            System.out.println("Something went wrong.");
+            return 0;
+        }
+    }
+
+
+    public Result search(int depth, int alpha, int beta) throws TimeoutException {
+        incrementNodeCount();
+        timeCheck();
         if (getGame().isGameOver())
             return new Result(getEvaluator().evaluate(), null, true);
         if (depth <= 0)
@@ -96,13 +173,15 @@ public class MnkGameSearcher {
 
         for (int move : generateMoves()) {
 
-            getGame().doMove(move);
+            timeCheck();
+            getGame().playMove(move);
             Result result = search(depth - 1, alpha, beta);
-            getGame().undoMove();
+            getGame().unplayMove();
 
             if (Thread.currentThread().isInterrupted())
                 return null;
             int score = result.getScore();
+            timeCheck();
             if (maxi ? score > alpha : score < beta) {
                 if (maxi) alpha = score;
                 else beta = score;
@@ -116,6 +195,7 @@ public class MnkGameSearcher {
             }
         }
 
+        timeCheck();
         int score = maxi ? alpha : beta;
         if (score == Game.MIN_SCORE + depth - 1) {
             score++;
@@ -124,6 +204,7 @@ public class MnkGameSearcher {
         }
 
         return new Result(score, pv, proof);
+
     }
 
     protected Iterable<Integer> generateMoves() {
@@ -150,7 +231,7 @@ public class MnkGameSearcher {
     }
 
     protected void updateWeights() {
-        int currentPly = getGame().getElapsedPly();
+        int currentPly = getGame().getNumberOfMovesPlayed();
         while (lastPly > currentPly)
             updateMove(getGame().getHistory(--lastPly), true);
         while (lastPly < currentPly)
@@ -172,6 +253,25 @@ public class MnkGameSearcher {
                 weights[square + dirs[i] * j] += (undo ? -1 : 1) * (k - j);
             }
         }
+    }
+
+    protected void timeCheck() throws TimeoutException {
+        float RELAXATION = 0.94f;
+        if (System.currentTimeMillis() - startTime > timeLimit)
+            throw new TimeoutException();
+    }
+
+    private int generateRandomMove() {
+        Random rand = new Random();
+
+        int i = 0;
+        for (int move : game.generateMoves()) {
+            if (rand.nextInt(game.getSize() - 1) == 0)
+                return move;
+            i++;
+        }
+
+        throw new IllegalStateException("Failed to generate move.");
     }
 
 }

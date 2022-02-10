@@ -9,18 +9,29 @@ public class MnkGameEvaluator {
     }
 
     public int evaluate() {
+        /*int winner = game.getWinner();
+        return switch (winner) {
+            case Game.PLAYER_1 -> Game.MAX_SCORE;
+            case Game.PLAYER_2 -> Game.MIN_SCORE;
+            default -> 0;
+        };*/
+
         int score = 0;
         for (int row = 0; row < game.getRows(); row++)
-            score += evaluate(game.getRowSquares(row));
+            score += evaluate(game.getCellsForRow(row));
         for (int col = 0; col < game.getCols(); col++)
-            score += evaluate(game.getColSquares(col));
+            score += evaluate(game.getCellsForColumns(col));
         for (int diag = 0; diag < game.getDiagonals(); diag++)
             score += evaluate(game.getDiagonalSquares(diag));
-        for (int diag = 0; diag < game.getAntiDiagonals(); diag++)
+        for (int diag = 0; diag < game.getDiagonals(); diag++)
             score += evaluate(game.getAntiDiagonalSquares(diag));
         return score;
+
     }
 
+    /**
+     * Evaluate single line scores for every cells
+     */
     protected int evaluate(int[] line) {
         int k = game.getK();
         if (line.length < k)
@@ -28,6 +39,7 @@ public class MnkGameEvaluator {
 
         int p1 = 0;
         int p2 = 0;
+        //Check how many squares inside the line are occupied by the players
         for (int i = 0; i < k - 1; i++) {
             if (line[i] == Game.PLAYER_1) {
                 p1++;
@@ -35,6 +47,9 @@ public class MnkGameEvaluator {
                 p2++;
             }
         }
+        /**Check how many points are inside that line for a player to win
+         * for example 3x3 with k=3 equals 3 - 3 + 1
+         * */
         int[] p1Score = new int[line.length - k + 1];
         int[] p2Score = new int[line.length - k + 1];
         for (int i = 0; i < p1Score.length; i++) {
