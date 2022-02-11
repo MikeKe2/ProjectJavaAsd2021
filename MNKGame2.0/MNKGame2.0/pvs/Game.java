@@ -5,7 +5,7 @@ import mnkgame.MNKCell;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class Game {
+public class Game implements Cloneable {
 
     public static final int MAX_SCORE = 1 << 20;
     public static final int MIN_SCORE = -MAX_SCORE;
@@ -17,11 +17,10 @@ public class Game {
     // Constant representing the second player.
     public static final int PLAYER_2 = -PLAYER_1;
 
-
     // Instance variables
     private final int columns, rows, K, size;
-    private final int[] board;
-    private final int[] history;
+    private int[] board;
+    private int[] history;
 
     private int ply; // number of past piece placements
     private int turn; // current player, winning player (if any)
@@ -41,6 +40,25 @@ public class Game {
 
         winner = PLAYER_NONE;
         ply = 0;
+    }
+
+    @Override
+    public Game clone() {
+        try {
+            Game copy = (Game) super.clone();
+            copy.board = board.clone();
+            for(int i = 0; i < board.length; i++)
+                copy.board[i] = board[i];
+            copy.history = history.clone();
+            for(int i = 0; i < history.length; i++)
+                copy.history[i] = history[i];
+            copy.turn = turn;
+            copy.ply = ply;
+            return copy;
+        } catch (CloneNotSupportedException e) {
+            // Should never happen: we support clone
+            throw new InternalError(e.toString());
+        }
     }
 
     public int getCols() {
@@ -72,18 +90,28 @@ public class Game {
     }
 
     public int getRow(int move) {
-        return move / columns;
+        return move / rows;
     }
 
     public int getCol(int move) {
-        return move % columns;
+        return move % rows;
     }
 
-    public void playMove(MNKCell move) {
+    public int getRemainingMoves() {
+        return size - ply;
+    }
 
+    public int getCurrentPlayer() {
+        return turn;
+    }
+
+    public int getDiagonals() {
+        return rows + rows - 3;
+    }
+
+
+    public void playMove(MNKCell move) {
         playMove(getMove(move.i, move.j));
-        //System.out.println();
-        //check();
     }
 
     public void playMove(int move) {
@@ -91,6 +119,10 @@ public class Game {
         history[ply++] = move;
         winner = isWinningCell(getRow(move), getCol(move));
         turn = -turn;
+    }
+
+    public boolean checkMove(int move){
+        return board[move] == PLAYER_NONE;
     }
 
     public void unplayMove() {
@@ -115,14 +147,6 @@ public class Game {
         return list;
     }
 
-    /**
-     * Get numbers of diagonals
-     */
-    public int getDiagonals() {
-        int[][] board = getBoard();
-        return board.length + board.length - 1;
-    }
-
     public int getDiagonalSize(int diag) {
         return min(rows + columns - 1 - diag, diag + 1, rows, columns);
     }
@@ -138,8 +162,7 @@ public class Game {
     public int[] getDiagonalSquares(int diag, int midpoint) {
         int[] list = new int[getDiagonalSize(diag - 1)];
         int[][] board = getBoard();
-        int rowIndex;
-        int columnIndex;
+        int rowIndex, columnIndex;
         if (diag <= midpoint) {
             itemsInDiagonal++;
             for (int j = 0; j < itemsInDiagonal; j++) {
@@ -160,40 +183,28 @@ public class Game {
 
     public void check() {
         int[][] B = getBoard();
-        System.out.println();
         System.out.println("----------------------------------------");
-        System.out.println(B[0][0] + "\t" + B[0][1] + "\t" + B[0][2]);
-        System.out.println(B[1][0] + "\t" + B[1][1] + "\t" + B[1][2]);
-        System.out.println(B[2][0] + "\t" + B[2][1] + "\t" + B[2][2]);
-        System.out.println("Turn" + turn);
+        System.out.println(B[0][0] + "\t" + B[0][1] + "\t" + B[0][2] + "\t" + B[0][3]);
+        System.out.println(B[1][0] + "\t" + B[1][1] + "\t" + B[1][2] + "\t" + B[2][3]);
+        System.out.println(B[2][0] + "\t" + B[2][1] + "\t" + B[2][2] + "\t" + B[2][3]);
+        System.out.println(B[3][0] + "\t" + B[3][1] + "\t" + B[3][2] + "\t" + B[3][3]);
     }
 
-    /*public static void printRightToLeftDiagonal(int[][] matrix) {
-    int n = matrix.length;
-
-    int j = n - 1;
-    for (int i = 0; i < n; ++i) {
-        printReverseDiagonal(matrix, i, j);
-    }
-
-    int i = n - 1;
-    for(j = n - 2; j >= 0; --j) {
-       printReverseDiagonal(matrix, i, j);
-    }
-}*/
-
-    public int[] getAntiDiagonalSquares(int diag) {
+    public int[] getAntiDiagonalSquares(int counter, int i, int j) {
+        int[] list = new int[getDiagonalSize(counter - 1)];
         int[][] board = getBoard();
-        int i = 0;
-        int[] list = new int[getDiagonalSize(diag)];
-        System.out.print("List length: " + list.length + "\t Diag: " + diag + "\t i:" + i + "\t ");
-        for (int row = diag - 1, column = diag - 1; row >= 0 && column >= 0; --row, --column) {
-            System.out.print(board[row][column] + " ");
-            list[i] = board[row][column];
-            i++;
-        }
-        System.out.println();
+        int k = 0;
 
+        //System.out.print("Board length: " + list.length + "\t i: " + i + "\t j:" + j + "\t ");
+        list[k] = board[i][j];
+        //System.out.print(" " + list[k]);
+        for (int row = i - 1, column = j - 1; row >= 0 && column >= 0; --row, --column) {
+            k++;
+            list[k] = board[row][column];
+            //System.out.print(" " + list[k]);
+        }
+
+        //System.out.println();
         /*int startRow = Math.max(diag - columns, 0);
         int startCol = Math.min(diag, columns - 1);
         int move = getMove(startRow, startCol);
@@ -203,19 +214,6 @@ public class Game {
             move += columns - 1;
         }*/
         return list;
-    }
-
-    //example for matrix[2, 2] it will print 9 5 1
-    private static void printReverseDiagonal(int[][] matrix, int i, int j) {
-        System.out.print(matrix[i][j]);
-        for (int row = i - 1, column = j - 1; row >= 0 && column >= 0; --row, --column) {
-            System.out.print(" " + matrix[row][column]);
-        }
-        System.out.println();
-    }
-
-    public int getWinner() {
-        return winner;
     }
 
     public boolean hasWinner() {
@@ -273,15 +271,6 @@ public class Game {
         if (n >= K) return turn;
 
         return PLAYER_NONE;
-    }
-
-
-    public int getRemainingMoves() {
-        return size - ply;
-    }
-
-    public int getCurrentPlayer() {
-        return turn;
     }
 
     public Iterable<Integer> generateMoves() {

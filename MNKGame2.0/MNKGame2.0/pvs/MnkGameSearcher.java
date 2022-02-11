@@ -1,5 +1,7 @@
 package pvs;
 
+import mnkgame.MNKCell;
+
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 
@@ -58,6 +60,10 @@ public class MnkGameSearcher {
         this.lastPly = 0;
     }
 
+    public void update(MNKCell cell) {
+        game.playMove(cell);
+    }
+
     public final Game getGame() {
         return game;
     }
@@ -76,22 +82,26 @@ public class MnkGameSearcher {
 
     public int iterativeDeepening() {
         startTime = System.currentTimeMillis();
-        MnkGameSearcher.Result result = null;
+        MnkGameSearcher.Result result;
         int depth = game.maxDepth();
         int move = 0;
 
-        for (int i = 1; i <= depth; i++) {
-            try {
+        final Game board = game.clone();
+        try {
+            printSearchResultHeader();
+            for (int i = 1; i <= depth; i++) {
                 result = search(i, Game.MIN_SCORE, Game.MAX_SCORE);
                 move = result.getPrincipleVariationMove();
                 if (result.isProvenResult())
                     break;
-            } catch (TimeoutException ex) {
-                System.out.println("ERRORE QUI");
-                assert result != null;
-                    move = result.getPrincipleVariationMove() < 0 ? result.getPrincipleVariationMove() : generateRandomMove();
+                printSearchResult(result, depth, timeLimit, nodes);
             }
+        } catch (TimeoutException ex) {
+            move = generateMoves().iterator().next();
+            System.out.println("Broken move" + move);
         }
+
+        this.game = board;
         return move;
     }
 
@@ -231,15 +241,4 @@ public class MnkGameSearcher {
         if (System.currentTimeMillis() - startTime > timeLimit)
             throw new TimeoutException();
     }
-
-    private int generateRandomMove() {
-        Random rand = new Random();
-
-        for (int move : game.generateMoves()) {
-            if (rand.nextInt(game.getSize() - 1) == 0)
-                return move;
-        }
-        throw new IllegalStateException("Failed to generate move.");
-    }
-
 }

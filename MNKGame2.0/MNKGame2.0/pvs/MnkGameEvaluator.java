@@ -11,23 +11,33 @@ public class MnkGameEvaluator {
     public int evaluate() {
         int score = 0;
 
+        /*Row*/
         for (int row = 0; row < game.getRows(); row++)
             score += evaluate(game.getCellsForRow(row));
+
+        /*Column*/
         for (int col = 0; col < game.getCols(); col++)
             score += evaluate(game.getCellsForColumns(col));
 
+        /*Diagonal*/
         int midpoint = (game.getDiagonals() / 2) + 1;
         game.resetItemsInDiagonal();
-
         for (int diag = 1; diag <= game.getDiagonals(); diag++)
             score += evaluate(game.getDiagonalSquares(diag, midpoint));
 
+        /*Anti diagonal*/
+        int n = game.getRows(), j = n - 1, counter = 0;
+        for (int i = 0; i < n; ++i) {
+            counter++;
+            score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
+        }
+        int i = n - 1;
+        for (j = n - 2; j >= 0; --j) {
+            counter--;
+            score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
 
-        for (int diag = 1; diag <= game.getDiagonals(); diag++)
-            score += evaluate(game.getAntiDiagonalSquares(diag));
-
+        }
         return score;
-
     }
 
     /**
