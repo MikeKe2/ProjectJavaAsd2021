@@ -3,16 +3,12 @@ package pvs;
 import mnkgame.MNKCell;
 import mnkgame.MNKPlayer;
 
-import java.util.concurrent.ExecutionException;
-
 public class AiPvs implements MNKPlayer {
 
     private long time;
     private Game game;
 
     private MnkGameSearcher searcher;
-    private MnkGameEvaluator evaluator;
-
 
     @Override
     public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
@@ -20,8 +16,7 @@ public class AiPvs implements MNKPlayer {
 
         this.time = (long) timeout_in_secs * 1000;
 
-        evaluator = new MnkGameEvaluator(game);
-        searcher = new MnkGameSearcher(game, evaluator, time);
+        searcher = new MnkGameSearcher(game, time);
     }
 
     @Override
