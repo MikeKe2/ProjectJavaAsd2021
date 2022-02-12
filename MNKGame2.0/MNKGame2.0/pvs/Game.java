@@ -23,8 +23,8 @@ public class Game implements Cloneable {
     private int[] history;
 
     private int ply; // number of past piece placements
-    private int turn; // current player, winning player (if any)
-    private int winner;
+    private int turn; // current player
+    private int winner; // winning player
     private int itemsInDiagonal;
 
     public Game(int row, int column, int K) {
@@ -47,16 +47,13 @@ public class Game implements Cloneable {
         try {
             Game copy = (Game) super.clone();
             copy.board = board.clone();
-            for (int i = 0; i < board.length; i++)
-                copy.board[i] = board[i];
+            System.arraycopy(board, 0, copy.board, 0, board.length);
             copy.history = history.clone();
-            for (int i = 0; i < history.length; i++)
-                copy.history[i] = history[i];
+            System.arraycopy(history, 0, copy.history, 0, history.length);
             copy.turn = turn;
             copy.ply = ply;
             return copy;
         } catch (CloneNotSupportedException e) {
-            // Should never happen: we support clone
             throw new InternalError(e.toString());
         }
     }
@@ -109,7 +106,6 @@ public class Game implements Cloneable {
         return rows + rows - 1;
     }
 
-
     public void playMove(MNKCell move) {
         playMove(getMove(move.i, move.j));
     }
@@ -121,7 +117,7 @@ public class Game implements Cloneable {
         turn = -turn;
     }
 
-    public void unplayMove() {
+    public void unPlayMove() {
         int index = history[ply - 1];
         turn = -turn;
         winner = PLAYER_NONE;
@@ -164,7 +160,6 @@ public class Game implements Cloneable {
             for (int j = 0; j < itemsInDiagonal; j++) {
                 rowIndex = (diag - j) - 1;
                 columnIndex = j;
-                System.out.print(board[rowIndex][columnIndex] + " ");
                 list[j] = board[rowIndex][columnIndex];
             }
         } else {
@@ -172,11 +167,9 @@ public class Game implements Cloneable {
             for (int j = 0; j < itemsInDiagonal; j++) {
                 rowIndex = (board.length - 1) - j;
                 columnIndex = (diag - board.length) + j;
-                System.out.print(board[rowIndex][columnIndex] + " ");
                 list[j] = board[rowIndex][columnIndex];
             }
         }
-        System.out.println();
         return list;
     }
 
@@ -188,9 +181,9 @@ public class Game implements Cloneable {
         System.out.println(B[1][0] + "\t" + B[1][1] + "\t" + B[1][2] + "\t" + B[2][3]);
         System.out.println(B[2][0] + "\t" + B[2][1] + "\t" + B[2][2] + "\t" + B[2][3]);
         System.out.println(B[3][0] + "\t" + B[3][1] + "\t" + B[3][2] + "\t" + B[3][3]);*/
-        System.out.println(B[0][0] + "\t" + B[0][1] + "\t" + B[0][2] );
-        System.out.println(B[1][0] + "\t" + B[1][1] + "\t" + B[1][2] );
-        System.out.println(B[2][0] + "\t" + B[2][1] + "\t" + B[2][2] );
+        System.out.println(B[0][0] + "\t" + B[0][1] + "\t" + B[0][2]);
+        System.out.println(B[1][0] + "\t" + B[1][1] + "\t" + B[1][2]);
+        System.out.println(B[2][0] + "\t" + B[2][1] + "\t" + B[2][2]);
     }
 
     public int[] getAntiDiagonalSquares(int counter, int i, int j) {
@@ -204,6 +197,10 @@ public class Game implements Cloneable {
             list[k] = board[row][column];
         }
         return list;
+    }
+
+    public int getWinner() {
+        return winner;
     }
 
     public boolean hasWinner() {

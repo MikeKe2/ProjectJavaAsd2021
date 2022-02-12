@@ -40,7 +40,6 @@ public class MnkGameSearcher {
     private Game game;
     protected int[] weights;
     private int lastPly;
-    private long nodes;
     private long startTime;
     final private long timeLimit;
 
@@ -67,7 +66,7 @@ public class MnkGameSearcher {
     }
 
     protected final void incrementNodeCount() {
-        nodes++;
+        //nodes++;
     }
 
     protected int numMoves() {
@@ -79,12 +78,24 @@ public class MnkGameSearcher {
         MnkGameSearcher.Result result;
         int depth = game.maxDepth();
         int move = 0;
+        int alpha = Game.MIN_SCORE;
+        int beta = Game.MAX_SCORE;
 
         final Game board = game.clone();
         try {
             //printSearchResultHeader();
             for (int i = 1; i <= depth; i++) {
-                result = search(i, Game.MIN_SCORE, Game.MAX_SCORE);
+                result = search(i, alpha, beta);
+                //Aspiration Window
+                if (result.score <= alpha || result.score >= beta) {
+                    alpha = Game.MIN_SCORE;
+                    beta = Game.MAX_SCORE;
+                    System.out.println("bruh momento");
+                    i--;
+                } else {
+                    alpha = result.score - 100;
+                    beta = result.score + 100;
+                }
                 move = result.getPrincipleVariationMove();
                 if (result.isProvenResult())
                     break;
@@ -147,14 +158,15 @@ public class MnkGameSearcher {
             timeCheck();
             getGame().playMove(move);
             Result result = search(depth - 1, alpha, beta);
-            getGame().unplayMove();
+            getGame().unPlayMove();
 
             int score = result.getScore();
-            System.out.println("Depth: " + depth + "\tmove: " + move + "\tscore: " + score);
+            //System.out.println("Depth: " + depth + "\tmove: " + move + "\tscore: " + score);
             if (Thread.currentThread().isInterrupted())
                 return null;
 
             timeCheck();
+            //if (maxi ? score >= beta : score <= alpha) break;
             if (maxi ? score > alpha : score < beta) {
                 if (maxi) alpha = score;
                 else beta = score;
@@ -178,6 +190,42 @@ public class MnkGameSearcher {
 
         return new Result(score, pv, proof);
     }
+/*
+    public Result generateDefensiveMove() throws TimeoutException {
+        for (int move : generateMoves()) {
+            getGame().playMove(move);
+            Result result = new Result(evaluate(), null, false);
+            getGame().unPlayMove();
+
+            int score = result.getScore();
+            if (Thread.currentThread().isInterrupted())
+                return null;
+
+            timeCheck();
+            //if (maxi ? score >= beta : score <= alpha) break;
+            if (maxi ? score > alpha : score < beta) {
+                if (maxi) alpha = score;
+                else beta = score;
+                proof = result.isProvenResult();
+                if (alpha >= beta)
+                    break;
+                pv.clear();
+                pv.add(move);
+                if (result.getPrincipleVariation() != null)
+                    pv.addAll(result.getPrincipleVariation());
+            }
+        }
+
+        timeCheck();
+        int score = maxi ? alpha : beta;
+        if (score == Game.MIN_SCORE + depth - 1) {
+            score++;
+        } else if (score == Game.MAX_SCORE - depth + 1) {
+            score--;
+        }
+
+        return new Result(score, pv, proof);
+    }*/
 
 
     protected Iterable<Integer> generateMoves() {
@@ -238,36 +286,40 @@ public class MnkGameSearcher {
     public int evaluate() {
         int score = 0;
 
-        game.check();
+        int winner = getGame().getWinner();
 
-        /*Row*/
-        for (int row = 0; row < game.getRows(); row++)
-            score += evaluate(game.getCellsForRow(row));
+        if (winner == Game.PLAYER_1)
+            return Game.MAX_SCORE;
+        else if (winner == Game.PLAYER_2)
+            return Game.MIN_SCORE;
+        else {
+            /*Row*/
+            for (int row = 0; row < game.getRows(); row++)
+                score += evaluate(game.getCellsForRow(row));
 
-        /*Column*/
-        for (int col = 0; col < game.getCols(); col++)
-            score += evaluate(game.getCellsForColumns(col));
+            /*Column*/
+            for (int col = 0; col < game.getCols(); col++)
+                score += evaluate(game.getCellsForColumns(col));
 
-        /*Diagonal*/
-        int midpoint = (game.getDiagonals() / 2) + 1;
-        game.resetItemsInDiagonal();
-        for (int diag = 1; diag <= game.getDiagonals(); diag++)
-            score += evaluate(game.getDiagonalSquares(diag, midpoint));
+            /*Diagonal*/
+            int midpoint = (game.getDiagonals() / 2) + 1;
+            game.resetItemsInDiagonal();
+            for (int diag = 1; diag <= game.getDiagonals(); diag++)
+                score += evaluate(game.getDiagonalSquares(diag, midpoint));
 
-        /*Anti diagonal*/
-        int n = game.getRows(), j = n - 1, counter = 0;
-        for (int i = 0; i < n; ++i) {
-            counter++;
-            score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
+            /*Anti diagonal*/
+            int n = game.getRows(), j = n - 1, counter = 0;
+            for (int i = 0; i < n; ++i) {
+                counter++;
+                score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
+            }
+            int i = n - 1;
+            for (j = n - 2; j >= 0; --j) {
+                counter--;
+                score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
+            }
+            return score;
         }
-        int i = n - 1;
-        for (j = n - 2; j >= 0; --j) {
-            counter--;
-            score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
-        }
-        //System.out.print(score + " ");
-        //System.out.println();
-        return score;
     }
 
     /**
@@ -288,10 +340,8 @@ public class MnkGameSearcher {
                 p2++;
             }
         }
-        //System.out.print(p1 + " - " + p2);
-        /**Check how many points are inside that line for a player to win
-         * for example 3x3 with k=3 equals 3 - 3 + 1
-         * */
+
+        //For every
         int[] p1Score = new int[line.length - k + 1];
         int[] p2Score = new int[line.length - k + 1];
         for (int i = 0; i < p1Score.length; i++) {
