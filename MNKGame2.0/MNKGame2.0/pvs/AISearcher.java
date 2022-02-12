@@ -5,7 +5,7 @@ import mnkgame.MNKCell;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 
-public class MnkGameSearcher {
+public class AISearcher {
 
     public record Result(int score, List<Integer> pv, boolean proof) {
 
@@ -43,7 +43,7 @@ public class MnkGameSearcher {
     private long startTime;
     final private long timeLimit;
 
-    public MnkGameSearcher(Game game, long timeLimit) {
+    public AISearcher(Game game, long timeLimit) {
         this.game = game;
         this.timeLimit = timeLimit;
         this.weights = new int[game.getSize()];
@@ -75,7 +75,7 @@ public class MnkGameSearcher {
 
     public int iterativeDeepening() {
         startTime = System.currentTimeMillis();
-        MnkGameSearcher.Result result;
+        AISearcher.Result result;
         int depth = game.maxDepth();
         int move = 0;
         int alpha = Game.MIN_SCORE;
@@ -90,7 +90,7 @@ public class MnkGameSearcher {
                 if (result.score <= alpha || result.score >= beta) {
                     alpha = Game.MIN_SCORE;
                     beta = Game.MAX_SCORE;
-                    System.out.println("bruh momento");
+                    //System.out.println("bruh momento");
                     i--;
                 } else {
                     alpha = result.score - 100;
@@ -115,7 +115,7 @@ public class MnkGameSearcher {
     }
 
 
-    private void printSearchResult(MnkGameSearcher.Result r, int d, long t, long n) {
+    private void printSearchResult(AISearcher.Result r, int d, long t, long n) {
         System.out.printf("%d\t\t", d);
         System.out.printf("%.3f\t\t", t / 1000.0);
         System.out.printf("%d\t\t", n);
