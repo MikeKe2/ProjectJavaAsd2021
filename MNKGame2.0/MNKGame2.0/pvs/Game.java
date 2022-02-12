@@ -7,7 +7,7 @@ import java.util.NoSuchElementException;
 
 public class Game implements Cloneable {
 
-    public static final int MAX_SCORE = 1 << 20;
+    public static final int MAX_SCORE = 1 << 14;
     public static final int MIN_SCORE = -MAX_SCORE;
 
     // Constant representing empty spaces, i.e. "no" player.
@@ -70,6 +70,10 @@ public class Game implements Cloneable {
         return K;
     }
 
+    public int getSize() {
+        return size;
+    }
+
     public int getNumberOfMovesPlayed() {
         return ply;
     }
@@ -82,20 +86,12 @@ public class Game implements Cloneable {
         return row * rows + col;
     }
 
-    public int getSize() {
-        return size;
-    }
-
     public int getRow(int move) {
         return move / columns;
     }
 
     public int getCol(int move) {
         return move % columns;
-    }
-
-    public int getRemainingMoves() {
-        return size - ply;
     }
 
     public int getCurrentPlayer() {
@@ -173,19 +169,6 @@ public class Game implements Cloneable {
         return list;
     }
 
-    public void check() {
-        int[][] B = getBoard();
-        System.out.println("----------------------------------------");
-        /*
-        System.out.println(B[0][0] + "\t" + B[0][1] + "\t" + B[0][2] + "\t" + B[0][3]);
-        System.out.println(B[1][0] + "\t" + B[1][1] + "\t" + B[1][2] + "\t" + B[2][3]);
-        System.out.println(B[2][0] + "\t" + B[2][1] + "\t" + B[2][2] + "\t" + B[2][3]);
-        System.out.println(B[3][0] + "\t" + B[3][1] + "\t" + B[3][2] + "\t" + B[3][3]);*/
-        System.out.println(B[0][0] + "\t" + B[0][1] + "\t" + B[0][2]);
-        System.out.println(B[1][0] + "\t" + B[1][1] + "\t" + B[1][2]);
-        System.out.println(B[2][0] + "\t" + B[2][1] + "\t" + B[2][2]);
-    }
-
     public int[] getAntiDiagonalSquares(int counter, int i, int j) {
         int[] list = new int[getDiagonalSize(counter - 1)];
         int[][] board = getBoard();
@@ -201,14 +184,6 @@ public class Game implements Cloneable {
 
     public int getWinner() {
         return winner;
-    }
-
-    public boolean hasWinner() {
-        return winner != PLAYER_NONE;
-    }
-
-    public boolean isGameOver() {
-        return hasWinner() || ply == size;
     }
 
     public int getHistory(int ply) {

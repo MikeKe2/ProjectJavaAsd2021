@@ -7,7 +7,7 @@ import java.util.concurrent.TimeoutException;
 
 public class AISearcher {
 
-    public record Result(int score, List<Integer> pv, boolean proof) {
+    public record Result(int score, List<Integer> pv) {
 
         public int getScore() {
             return score;
@@ -19,10 +19,6 @@ public class AISearcher {
 
         public int getPrincipleVariationMove() {
             return pv.get(0);
-        }
-
-        public boolean isProvenResult() {
-            return proof;
         }
 
     }
@@ -57,20 +53,16 @@ public class AISearcher {
         this.lastPly = 0;
     }
 
-    public void update(MNKCell cell) {
-        game.playMove(cell);
+    public void update(MNKCell move) {
+        game.playMove(move);
     }
 
     public final Game getGame() {
         return game;
     }
 
-    protected final void incrementNodeCount() {
-        //nodes++;
-    }
-
     protected int numMoves() {
-        return getGame().getRemainingMoves();
+        return getGame().maxDepth();
     }
 
     public int iterativeDeepening() {
@@ -81,96 +73,54 @@ public class AISearcher {
         int alpha = Game.MIN_SCORE;
         int beta = Game.MAX_SCORE;
 
-        final Game board = game.clone();
+        final Game backupGame = game.clone();
         try {
-            //printSearchResultHeader();
+            //iterativeDeepening
             for (int i = 1; i <= depth; i++) {
                 result = search(i, alpha, beta);
                 //Aspiration Window
                 if (result.score <= alpha || result.score >= beta) {
                     alpha = Game.MIN_SCORE;
                     beta = Game.MAX_SCORE;
-                    //System.out.println("bruh momento");
                     i--;
                 } else {
                     alpha = result.score - 100;
                     beta = result.score + 100;
                 }
                 move = result.getPrincipleVariationMove();
-                if (result.isProvenResult())
-                    break;
-                //printSearchResult(result, depth, timeLimit, nodes);
             }
         } catch (TimeoutException ex) {
             move = generateMoves().iterator().next();
-            System.out.println("Broken move" + move);
         }
+        this.game = backupGame;
 
-        this.game = board;
         return move;
     }
 
-    private void printSearchResultHeader() {
-        System.out.println("Depth\tTime\tNodes\tScore\tVariation");
-    }
-
-
-    private void printSearchResult(AISearcher.Result r, int d, long t, long n) {
-        System.out.printf("%d\t\t", d);
-        System.out.printf("%.3f\t\t", t / 1000.0);
-        System.out.printf("%d\t\t", n);
-        if (r.isProvenResult()) {
-            String result;
-            int distance;
-            if (r.getScore() != 0) {
-                result = "win";
-                distance = Math.abs(Math.abs(r.getScore()));
-            } else {
-                result = "draw";
-                distance = game.getRemainingMoves(); // remaining turns left
-            }
-            System.out.printf("%s-%d\t\t", result, distance);
-        } else {
-            System.out.printf("%d\t\t", r.getScore());
-        }
-        for (int move : r.getPrincipleVariation()) {
-            int row = game.getRow(move);
-            int col = game.getCol(move);
-            System.out.print(row + "," + col + " ");
-        }
-        System.out.println();
-    }
-
     public Result search(int depth, int alpha, int beta) throws TimeoutException {
-        incrementNodeCount();
         timeCheck();
 
-        if (getGame().isGameOver())
-            return new Result(evaluate(), null, true);
         if (depth <= 0)
-            return new Result(evaluate(), null, false);
+            return new Result(evaluate(), null);
 
-        boolean maxi = getGame().getCurrentPlayer() == Game.PLAYER_1;
-
+        boolean isPlayerOne = getGame().getCurrentPlayer() == Game.PLAYER_1;
         List<Integer> pv = new ArrayList<>(depth);
-        boolean proof = false;
+
         for (int move : generateMoves()) {
             timeCheck();
+
             getGame().playMove(move);
             Result result = search(depth - 1, alpha, beta);
             getGame().unPlayMove();
 
-            int score = result.getScore();
-            //System.out.println("Depth: " + depth + "\tmove: " + move + "\tscore: " + score);
             if (Thread.currentThread().isInterrupted())
                 return null;
 
+            int score = result.getScore();
             timeCheck();
-            //if (maxi ? score >= beta : score <= alpha) break;
-            if (maxi ? score > alpha : score < beta) {
-                if (maxi) alpha = score;
+            if (isPlayerOne ? score > alpha : score < beta) {
+                if (isPlayerOne) alpha = score;
                 else beta = score;
-                proof = result.isProvenResult();
                 if (alpha >= beta)
                     break;
                 pv.clear();
@@ -181,52 +131,15 @@ public class AISearcher {
         }
 
         timeCheck();
-        int score = maxi ? alpha : beta;
+        int score = isPlayerOne ? alpha : beta;
         if (score == Game.MIN_SCORE + depth - 1) {
             score++;
         } else if (score == Game.MAX_SCORE - depth + 1) {
             score--;
         }
 
-        return new Result(score, pv, proof);
+        return new Result(score, pv);
     }
-/*
-    public Result generateDefensiveMove() throws TimeoutException {
-        for (int move : generateMoves()) {
-            getGame().playMove(move);
-            Result result = new Result(evaluate(), null, false);
-            getGame().unPlayMove();
-
-            int score = result.getScore();
-            if (Thread.currentThread().isInterrupted())
-                return null;
-
-            timeCheck();
-            //if (maxi ? score >= beta : score <= alpha) break;
-            if (maxi ? score > alpha : score < beta) {
-                if (maxi) alpha = score;
-                else beta = score;
-                proof = result.isProvenResult();
-                if (alpha >= beta)
-                    break;
-                pv.clear();
-                pv.add(move);
-                if (result.getPrincipleVariation() != null)
-                    pv.addAll(result.getPrincipleVariation());
-            }
-        }
-
-        timeCheck();
-        int score = maxi ? alpha : beta;
-        if (score == Game.MIN_SCORE + depth - 1) {
-            score++;
-        } else if (score == Game.MAX_SCORE - depth + 1) {
-            score--;
-        }
-
-        return new Result(score, pv, proof);
-    }*/
-
 
     protected Iterable<Integer> generateMoves() {
         updateWeights();
@@ -341,7 +254,6 @@ public class AISearcher {
             }
         }
 
-        //For every
         int[] p1Score = new int[line.length - k + 1];
         int[] p2Score = new int[line.length - k + 1];
         for (int i = 0; i < p1Score.length; i++) {

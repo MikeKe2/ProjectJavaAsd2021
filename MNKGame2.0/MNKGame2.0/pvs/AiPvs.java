@@ -3,17 +3,15 @@ package pvs;
 import mnkgame.MNKCell;
 import mnkgame.MNKPlayer;
 
-public class AiPvs implements MNKPlayer {
+public class AiPvs implements MNKPlayer{
 
-    private long time;
     private Game game;
-
     private AISearcher searcher;
 
     @Override
     public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
         game = new Game(M, N, K);
-        this.time = (long) timeout_in_secs * 1000;
+        long time = (long) timeout_in_secs * 1000;
         searcher = new AISearcher(game, time);
     }
 
@@ -28,7 +26,9 @@ public class AiPvs implements MNKPlayer {
             searcher.update(MC[MC.length - 2]);
         if (MC.length > 0)
             searcher.update(MC[MC.length - 1]);
+
         int move = searcher.iterativeDeepening();
+
         return new MNKCell(game.getRow(move), game.getCol(move));
     }
 }
