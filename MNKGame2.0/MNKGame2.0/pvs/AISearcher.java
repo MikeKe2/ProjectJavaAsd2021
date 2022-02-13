@@ -2,55 +2,36 @@ package pvs;
 
 import mnkgame.MNKCell;
 
-import java.util.*;
+import java.util.HashMap;
 import java.util.concurrent.TimeoutException;
+
+import static pvs.Game.*;
 
 public class AISearcher {
 
-    public record Result(int score, List<Integer> pv) {
+    public static class EntryTT {
 
-        public int getScore() {
-            return score;
+        public int depth;
+        public int flag;
+        public int value;
+
+        public EntryTT(int depth, int flag, int value) {
+            this.depth = depth;
+            this.flag = flag;
+            this.value = value;
         }
 
-        public List<Integer> getPrincipleVariation() {
-            return pv;
-        }
-
-        public int getPrincipleVariationMove() {
-            return pv.get(0);
-        }
-
-    }
-
-    private static class WeightedMove {
-        Integer move;
-        int score;
-
-        public WeightedMove(Integer move, int score) {
-            this.move = move;
-            this.score = score;
-        }
     }
 
     private Game game;
-    protected int[] weights;
-    private int lastPly;
     private long startTime;
     final private long timeLimit;
+    private final HashMap<Long, EntryTT> transpositionTable;
 
     public AISearcher(Game game, long timeLimit) {
         this.game = game;
         this.timeLimit = timeLimit;
-        this.weights = new int[game.getSize()];
-        for (int i = 0; i < weights.length; i++) {
-            int top = game.getRow(i);
-            int bottom = game.getRows() - 1 - top;
-            int left = game.getCol(i);
-            int right = game.getCols() - 1 - left;
-            weights[i] = Math.min(Math.min(top, bottom), Math.min(left, right));
-        }
-        this.lastPly = 0;
+        transpositionTable = new HashMap<>(MAX_SCORE);
     }
 
     public void update(MNKCell move) {
@@ -61,134 +42,114 @@ public class AISearcher {
         return game;
     }
 
-    protected int numMoves() {
-        return getGame().maxDepth();
-    }
-
     public int iterativeDeepening() {
         startTime = System.currentTimeMillis();
-        AISearcher.Result result;
         int depth = game.maxDepth();
-        int move = 0;
+        int bestScore = 0;
+        int bestMove = -1;
+        boolean IamP1 = getGame().getCurrentPlayer() == Game.PLAYER_1;
         int alpha = Game.MIN_SCORE;
         int beta = Game.MAX_SCORE;
+        Game.IntegerPair partialScore;
 
         final Game backupGame = game.clone();
         try {
             //iterativeDeepening
             for (int i = 1; i <= depth; i++) {
-                result = search(i, alpha, beta);
-                //Aspiration Window
-                if (result.score <= alpha || result.score >= beta) {
+                partialScore = findBestMove(i, alpha, beta);
+                //Aspiration
+                if (((partialScore.second() <= alpha && alpha != Game.MIN_SCORE) || (beta != MAX_SCORE && partialScore.second() >= beta)) && i > 1) {
                     alpha = Game.MIN_SCORE;
                     beta = Game.MAX_SCORE;
                     i--;
                 } else {
-                    alpha = result.score - 100;
-                    beta = result.score + 100;
+                    alpha = partialScore.second() - 100;
+                    beta = partialScore.second() + 100;
                 }
-                move = result.getPrincipleVariationMove();
+                if ((IamP1 && partialScore.second() >= bestScore) || (!IamP1 && partialScore.second() <= bestScore)) {
+                    bestScore = partialScore.second();
+                    bestMove = partialScore.first();
+                }
             }
         } catch (TimeoutException ex) {
-            move = generateMoves().iterator().next();
         }
         this.game = backupGame;
 
-        return move;
+        return bestMove;
     }
 
-    public Result search(int depth, int alpha, int beta) throws TimeoutException {
-        timeCheck();
+    private Game.IntegerPair findBestMove(int depth, int alpha, int beta) throws TimeoutException {
+        int max = alpha;
+        int partialBestMove = 0;
 
-        if (depth <= 0)
-            return new Result(evaluate(), null);
-
-        boolean isPlayerOne = getGame().getCurrentPlayer() == Game.PLAYER_1;
-        List<Integer> pv = new ArrayList<>(depth);
-
-        for (int move : generateMoves()) {
+        for (int move : getGame().generateMoves()) {
             timeCheck();
-
             getGame().playMove(move);
-            Result result = search(depth - 1, alpha, beta);
+
+            int score = -AlphaBeta(depth, alpha, beta);
             getGame().unPlayMove();
 
-            if (Thread.currentThread().isInterrupted())
-                return null;
-
-            int score = result.getScore();
             timeCheck();
-            if (isPlayerOne ? score > alpha : score < beta) {
-                if (isPlayerOne) alpha = score;
-                else beta = score;
-                if (alpha >= beta)
-                    break;
-                pv.clear();
-                pv.add(move);
-                if (result.getPrincipleVariation() != null)
-                    pv.addAll(result.getPrincipleVariation());
+            /*if (IamP1 && score >= max) {
+                max = score;
+                partialBestMove = move;
+            } else if (!IamP1 && score <= min) {
+                min = score;
+                partialBestMove = move;
+            }*/
+            if (score >= max) {
+                max = score;
+                partialBestMove = move;
             }
+        }
+        return new Game.IntegerPair(partialBestMove, max);
+    }
+
+    private int AlphaBeta(int depth, int alpha, int beta) throws TimeoutException {
+        int val, hashf = hashfALPHA;
+        long zobristKey = getGame().computeKey();
+        timeCheck();
+
+        EntryTT entry = transpositionTable.get(zobristKey);
+        if (entry != null) {
+            if (entry.flag == hashfEXACT) {
+                return entry.value;
+            } else if (entry.flag == hashfBETA) {
+                beta = Math.min(beta, entry.value);
+            } else if (entry.flag == hashfALPHA) {
+                alpha = Math.max(alpha, entry.value);
+            }
+            if (alpha >= beta) {
+                return entry.value;
+            }
+        }
+
+        if (depth == 0) {
+            val = evaluate();
+            //Save val in transposition table
+            transpositionTable.put(zobristKey, new EntryTT(depth, val, hashfEXACT));
+            return val;
         }
 
         timeCheck();
-        int score = isPlayerOne ? alpha : beta;
-        if (score == Game.MIN_SCORE + depth - 1) {
-            score++;
-        } else if (score == Game.MAX_SCORE - depth + 1) {
-            score--;
-        }
-
-        return new Result(score, pv);
-    }
-
-    protected Iterable<Integer> generateMoves() {
-        updateWeights();
-
-        Comparator<WeightedMove> comp = (m1, m2) -> {
-            return m2.score - m1.score; // reverse
-        };
-
-        PriorityQueue<WeightedMove> moves = new PriorityQueue<>(numMoves(), comp);
-
-        for (Integer move : game.generateMoves())
-            moves.add(new WeightedMove(move, weights[move]));
-
-        return () -> new Iterator<>() {
-            @Override
-            public boolean hasNext() {
-                return !moves.isEmpty();
+        for (int move : getGame().generateMoves()) {
+            getGame().playMove(move);
+            val = -AlphaBeta(depth - 1, -beta, -alpha);
+            getGame().unPlayMove();
+            if (val >= beta) {
+                //RecordHash(depth, beta, hashfBETA);
+                transpositionTable.put(zobristKey, new EntryTT(depth, beta, hashfBETA));
+                return beta;
             }
-
-            @Override
-            public Integer next() {
-                return moves.remove().move;
-            }
-        };
-    }
-
-    protected void updateWeights() {
-        int currentPly = getGame().getNumberOfMovesPlayed();
-        while (lastPly > currentPly)
-            updateMove(getGame().getHistory(--lastPly), true);
-        while (lastPly < currentPly)
-            updateMove(getGame().getHistory(lastPly++), false);
-    }
-
-    protected void updateMove(int square, boolean undo) {
-        int cols = getGame().getCols();
-        int rows = getGame().getRows();
-        int k = getGame().getK();
-        int row = getGame().getRow(square);
-        int col = getGame().getCol(square);
-        int[] dirs = {-1, 1, -cols, cols, -cols - 1, cols + 1, -cols + 1, cols - 1};
-        int[] lens = {col, cols - 1 - col, row, rows - 1 - row, Math.min(col, row),
-                Math.min(cols - 1 - col, rows - 1 - row),
-                Math.min(cols - 1 - col, row), Math.min(col, rows - 1 - row)};
-        for (int i = 0; i < dirs.length; i++) {
-            for (int j = 1; j < Math.min(k, lens[i]); j++) {
-                weights[square + dirs[i] * j] += (undo ? -1 : 1) * (k - j);
+            if (val > alpha) {
+                hashf = hashfEXACT;
+                alpha = val;
             }
         }
+        timeCheck();
+        //RecordHash(depth, alpha, hashf);
+        transpositionTable.put(zobristKey, new EntryTT(depth, alpha, hashf));
+        return alpha;
     }
 
     protected void timeCheck() throws TimeoutException {
@@ -206,21 +167,17 @@ public class AISearcher {
         else if (winner == Game.PLAYER_2)
             return Game.MIN_SCORE;
         else {
-            /*Row*/
             for (int row = 0; row < game.getRows(); row++)
                 score += evaluate(game.getCellsForRow(row));
 
-            /*Column*/
             for (int col = 0; col < game.getCols(); col++)
                 score += evaluate(game.getCellsForColumns(col));
 
-            /*Diagonal*/
             int midpoint = (game.getDiagonals() / 2) + 1;
             game.resetItemsInDiagonal();
             for (int diag = 1; diag <= game.getDiagonals(); diag++)
                 score += evaluate(game.getDiagonalSquares(diag, midpoint));
 
-            /*Anti diagonal*/
             int n = game.getRows(), j = n - 1, counter = 0;
             for (int i = 0; i < n; ++i) {
                 counter++;
@@ -235,9 +192,6 @@ public class AISearcher {
         }
     }
 
-    /**
-     * Evaluate single line scores for every cells
-     */
     protected int evaluate(int[] line) {
         int k = game.getK();
         if (line.length < k)
@@ -245,7 +199,7 @@ public class AISearcher {
 
         int p1 = 0;
         int p2 = 0;
-        //Check how many squares inside the line are occupied by the players
+
         for (int i = 0; i < k - 1; i++) {
             if (line[i] == Game.PLAYER_1) {
                 p1++;
