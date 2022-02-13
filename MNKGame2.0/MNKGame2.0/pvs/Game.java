@@ -4,11 +4,19 @@ import mnkgame.MNKCell;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Random;
 
 public class Game implements Cloneable {
 
+    record IntegerPair(int first, int second) {
+    }
+
     public static final int MAX_SCORE = 1 << 14;
     public static final int MIN_SCORE = -MAX_SCORE;
+
+    public static final int hashfEXACT = 0;
+    public static final int hashfALPHA = 1;
+    public static final int hashfBETA = 2;
 
     // Constant representing empty spaces, i.e. "no" player.
     public static final int PLAYER_NONE = 0;
@@ -19,6 +27,7 @@ public class Game implements Cloneable {
 
     // Instance variables
     private final int columns, rows, K, size;
+    private long[][] zobrist;
     private int[] board;
     private int[] history;
 
@@ -37,6 +46,11 @@ public class Game implements Cloneable {
 
         history = new int[size];
         board = new int[size];
+        Random rd = new Random();
+        zobrist = new long[size][2];
+        for (int square = 0; square < zobrist.length; square++)
+            for (int side = 0; side < zobrist[side].length; side++)
+                zobrist[square][side] = rd.nextLong();
 
         winner = PLAYER_NONE;
         ply = 0;
@@ -50,12 +64,25 @@ public class Game implements Cloneable {
             System.arraycopy(board, 0, copy.board, 0, board.length);
             copy.history = history.clone();
             System.arraycopy(history, 0, copy.history, 0, history.length);
+            copy.zobrist = new long[size][2];
+            for (int i = 0; i < zobrist.length; i++)
+                copy.zobrist[i] = zobrist[i].clone();
             copy.turn = turn;
             copy.ply = ply;
             return copy;
         } catch (CloneNotSupportedException e) {
             throw new InternalError(e.toString());
         }
+    }
+
+    public long computeKey() {
+        long hashKey = 0;
+        for (int square = 0; square < board.length; square++)
+            if (board[square] != PLAYER_NONE) {
+                int player = board[square] == PLAYER_1 ? 0 : 1;
+                hashKey ^= zobrist[square][player];
+            }
+        return hashKey;
     }
 
     public int getCols() {
@@ -68,14 +95,6 @@ public class Game implements Cloneable {
 
     public int getK() {
         return K;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public int getNumberOfMovesPlayed() {
-        return ply;
     }
 
     public int maxDepth() {
@@ -184,11 +203,6 @@ public class Game implements Cloneable {
 
     public int getWinner() {
         return winner;
-    }
-
-    public int getHistory(int ply) {
-        if (ply < 0 || ply >= history.length) throw new IllegalArgumentException("Illegal history move access.");
-        return history[ply];
     }
 
     public int[][] getBoard() {
