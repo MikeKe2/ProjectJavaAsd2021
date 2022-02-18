@@ -2,6 +2,8 @@ package pvs;
 
 import mnkgame.MNKCell;
 import mnkgame.MNKPlayer;
+import pvs.AISearcher;
+import pvs.Game;
 
 public class AiPvs implements MNKPlayer{
 
@@ -12,7 +14,7 @@ public class AiPvs implements MNKPlayer{
     public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
         game = new Game(M, N, K);
         long time = (long) timeout_in_secs * 1000;
-        searcher = new AISearcher(game, time);
+        searcher = new AISearcher(game, time, first);
     }
 
     @Override

@@ -27,10 +27,12 @@ public class AISearcher {
     private long startTime;
     final private long timeLimit;
     private final HashMap<Long, EntryTT> transpositionTable;
+    private boolean IamP1;
 
-    public AISearcher(Game game, long timeLimit) {
+    public AISearcher(Game game, long timeLimit, boolean first) {
         this.game = game;
         this.timeLimit = timeLimit;
+        this.IamP1 = first;
         transpositionTable = new HashMap<>(MAX_SCORE);
     }
 
@@ -45,8 +47,7 @@ public class AISearcher {
     public int iterativeDeepening() {
         startTime = System.currentTimeMillis();
         int depth = game.maxDepth();
-        int bestScore = 0, bestMove = -1;
-        boolean IamP1 = getGame().getCurrentPlayer() == Game.PLAYER_1;
+        int bestScore = MIN_SCORE - 1, bestMove = -1;
         int alpha = Game.MIN_SCORE, beta = Game.MAX_SCORE;
         Game.IntegerPair partialScore;
 
@@ -56,7 +57,11 @@ public class AISearcher {
             for (int i = 1; i <= depth; i++) {
                 partialScore = findBestMove(i, alpha, beta);
                 //Aspiration
-                if (((partialScore.second() <= alpha && alpha != Game.MIN_SCORE) || (beta != MAX_SCORE && partialScore.second() >= beta)) && i > 1) {
+                if ((checkIfAiTurn() && partialScore.second() > bestScore)||(!checkIfAiTurn() && partialScore.second() <= bestScore)) {
+                    bestScore = partialScore.second();
+                    bestMove = partialScore.first();
+                }
+                /*if (((partialScore.second() <= alpha && alpha != Game.MIN_SCORE) || (beta != MAX_SCORE && partialScore.second() >= beta)) && i > 1) {
                     alpha = Game.MIN_SCORE;
                     beta = Game.MAX_SCORE;
                     i--;
@@ -67,24 +72,25 @@ public class AISearcher {
                 if ((IamP1 && partialScore.second() >= bestScore) || (!IamP1 && partialScore.second() <= bestScore)) {
                     bestScore = partialScore.second();
                     bestMove = partialScore.first();
-                }
+                }*/
             }
         } catch (TimeoutException ex) {
-            System.out.println("Error, move not found on time.");
+            //System.out.println("Error, move not found on time.");
         }
         this.game = backupGame;
+        System.out.println("Move: " + bestMove);
         return bestMove;
     }
 
     private Game.IntegerPair findBestMove(int depth, int alpha, int beta) throws TimeoutException {
-        int max = alpha;
+        int score = alpha;
         int partialBestMove = 0;
 
         for (int move : getGame().generateMoves()) {
             timeCheck();
-            getGame().playMove(move);
 
-            int score = -AlphaBeta(depth, alpha, beta);
+            getGame().playMove(move);
+            int searchResult = AlphaBeta(depth, alpha, beta);
             getGame().unPlayMove();
 
             timeCheck();
@@ -95,12 +101,16 @@ public class AISearcher {
                 min = score;
                 partialBestMove = move;
             }*/
-            if (score >= max) {
-                max = score;
+            if (searchResult >= score) {
+                score = searchResult;
                 partialBestMove = move;
             }
         }
-        return new Game.IntegerPair(partialBestMove, max);
+        return new Game.IntegerPair(partialBestMove, score);
+    }
+
+    private boolean checkIfAiTurn() {
+        return IamP1 == (game.getCurrentPlayer() == PLAYER_1);
     }
 
     private int AlphaBeta(int depth, int alpha, int beta) throws TimeoutException {
@@ -133,7 +143,8 @@ public class AISearcher {
         for (int move : getGame().generateMoves()) {
             getGame().playMove(move);
             val = -AlphaBeta(depth - 1, -beta, -alpha);
-            getGame().unPlayMove();
+
+                getGame().unPlayMove();
             if (val >= beta) {
                 //RecordHash(depth, beta, hashfBETA);
                 transpositionTable.put(zobristKey, new EntryTT(depth, beta, hashfBETA));
