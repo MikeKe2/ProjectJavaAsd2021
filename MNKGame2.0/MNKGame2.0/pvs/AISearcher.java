@@ -113,7 +113,7 @@ public class AISearcher {
             getGame().unPlayMove();
 
             timeCheck();
-            System.out.println("search result score:" + searchResult + "\t for move" + move + "\t depth:" + depth);
+            //System.out.println("search result score:" + searchResult + "\t for move" + move + "\t depth:" + depth);
             if (searchResult > score) {
                 score = searchResult;
                 partialBestMove = move;
@@ -124,6 +124,26 @@ public class AISearcher {
 
     private boolean checkIfAiTurn() {
         return first == (game.getCurrentPlayer() == PLAYER_1);
+    }
+
+    int Quiesce(int alpha, int beta) {
+        int stand_pat = evaluate();
+        if (stand_pat >= beta)
+            return beta;
+        if (alpha < stand_pat)
+            alpha = stand_pat;
+
+        for (int move : getGame().generateMoves()) {
+            game.playMove(move);
+            int score = -Quiesce(-beta, -alpha);
+            game.unPlayMove();
+
+            if (score >= beta)
+                return beta;
+            if (score > alpha)
+                alpha = score;
+        }
+        return alpha;
     }
 
     private int AlphaBeta(boolean minMax, int depth, int alpha, int beta) throws TimeoutException {
@@ -147,7 +167,7 @@ public class AISearcher {
             }
         }
         if (depth == 0) {
-            val = Math.abs(evaluate());
+            val = Quiesce(alpha, beta);
         } else if (minMax) {
             val = MIN_SCORE;
             a = alpha;
@@ -168,7 +188,6 @@ public class AISearcher {
                     timeCheck();
                     game.playMove(move);
                     val = Math.min(val, AlphaBeta(true, depth - 1, alpha, b));
-                    System.out.println("val: " + val + " \tdepth " + depth);
                     b = Math.min(b, val);
                     game.unPlayMove();
                 }
