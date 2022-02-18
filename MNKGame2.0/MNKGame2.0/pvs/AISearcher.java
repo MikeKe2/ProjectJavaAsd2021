@@ -3,6 +3,7 @@ package pvs;
 import mnkgame.MNKCell;
 
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
 import static pvs.Game.*;
@@ -57,7 +58,7 @@ public class AISearcher {
             for (int i = 1; i <= depth; i++) {
                 partialScore = findBestMove(i, alpha, beta);
                 //Aspiration
-                if ((checkIfAiTurn() && partialScore.second() > bestScore)||(!checkIfAiTurn() && partialScore.second() <= bestScore)) {
+                if ((checkIfAiTurn() && partialScore.second() > bestScore) || (!checkIfAiTurn() && partialScore.second() <= bestScore)) {
                     bestScore = partialScore.second();
                     bestMove = partialScore.first();
                 }
@@ -76,10 +77,21 @@ public class AISearcher {
             }
         } catch (TimeoutException ex) {
             //System.out.println("Error, move not found on time.");
+            bestMove = generateRandomMove();
         }
         this.game = backupGame;
         System.out.println("Move: " + bestMove);
         return bestMove;
+    }
+
+    private int generateRandomMove() {
+        Random rand = new Random();
+
+        for (int move : game.generateMoves()) {
+            if (rand.nextInt(game.getCols() * game.getRows() - 1) == 0)
+                return move;
+        }
+        throw new IllegalStateException("Failed to generate move.");
     }
 
     private Game.IntegerPair findBestMove(int depth, int alpha, int beta) throws TimeoutException {
@@ -144,7 +156,7 @@ public class AISearcher {
             getGame().playMove(move);
             val = -AlphaBeta(depth - 1, -beta, -alpha);
 
-                getGame().unPlayMove();
+            getGame().unPlayMove();
             if (val >= beta) {
                 //RecordHash(depth, beta, hashfBETA);
                 transpositionTable.put(zobristKey, new EntryTT(depth, beta, hashfBETA));
