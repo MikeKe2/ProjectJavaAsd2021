@@ -54,10 +54,10 @@ public class AISearcher {
         final Game backupGame = game.clone();
         try {
             //iterativeDeepening
-
+            depth = depth > 10 ? depth / 2 : depth;
             for (int i = 1; i <= depth; i++) {
                 partialScore = findBestMove(i, alpha, beta);
-                System.out.println("Depth:" + i);
+                //System.out.println("Depth:" + i);
                 //System.out.println("Depth:" + i + "\t isAITurn?: " + checkIfAiTurn() + "\tScore:" + partialScore.score() + "\t move" + partialScore.move());
                 if (partialScore.score() > bestScore) {
                     bestScore = partialScore.score();
@@ -112,10 +112,10 @@ public class AISearcher {
 
             getGame().playMove(move);
             int searchResult = AlphaBeta(false, depth, alpha, beta);
+            System.out.println("FBM_MOVE: " + move + "\tDepth: " + depth + "\t Score: " + searchResult);
             getGame().unPlayMove();
 
             timeCheck();
-            //System.out.println("search result score:" + searchResult + "\t for move" + move + "\t depth:" + depth);
             if (searchResult > score) {
                 score = searchResult;
                 partialBestMove = move;
@@ -128,34 +128,36 @@ public class AISearcher {
         return first == (game.getCurrentPlayer() == PLAYER_1);
     }
 
-    private int AlphaBeta(boolean minMax, int depth, int alpha, int beta) throws TimeoutException {
+    private int AlphaBeta(boolean minimum, int depth, int alpha, int beta) throws TimeoutException {
         int val = 0;
         int a, b;
         long zobristKey = getGame().computeKey();
         timeCheck();
+        //System.out.println(minimum + "\t" + depth + "\t" + alpha + "\t" + beta);
         EntryTT entry = transpositionTable.get(zobristKey);
         if (entry != null) {
             if (depth <= entry.depth) {
-                /*if (entry.flag == hashfEXACT) {
-                    return entry.value;
-                } else if (entry.flag == hashfBETA) {
-                    beta = Math.min(beta, entry.value);
-                } else if (entry.flag == hashfALPHA) {
-                    alpha = Math.max(alpha, entry.value);
-                }*/
-                if (alpha >= beta) {
-                    return entry.value;
+                if (entry.lowerbound >= beta) {
+                    //System.out.println("LB " + entry.lowerbound);
+                    return entry.lowerbound;
                 }
+                if (entry.upperbound <= alpha) {
+                    //System.out.println("UB " + entry.upperbound);
+                    return entry.upperbound;
+                }
+                alpha = Math.max(alpha, entry.lowerbound);
+                beta = Math.min(beta, entry.upperbound);
+
             }
         }
         if (depth == 0) {
             val = evaluate();
-        } else if (minMax) {
+        } else if (minimum) {
             val = MIN_SCORE;
             a = alpha;
             for (int move : getGame().generateMoves()) {
                 if (val < beta) {
-                    timeCheck();
+                    //System.out.println("MIN_MOVE: " + move);
                     game.playMove(move);
                     val = Math.max(val, AlphaBeta(false, depth - 1, a, beta));
                     a = Math.max(a, val);
@@ -167,7 +169,7 @@ public class AISearcher {
             b = beta;
             for (int move : getGame().generateMoves()) {
                 if (val > alpha) {
-                    timeCheck();
+                    //System.out.println("MAX_MOVE: " + move);
                     game.playMove(move);
                     val = Math.min(val, AlphaBeta(true, depth - 1, alpha, b));
                     b = Math.min(b, val);
@@ -177,15 +179,16 @@ public class AISearcher {
 
         }
         if (val <= alpha)
-            transpositionTable.put(zobristKey, new EntryTT(depth, val, hashfALPHA));
+            transpositionTable.put(zobristKey, new EntryTT(depth, Integer.MIN_VALUE, val));
         if (val > alpha && val < beta)
-            transpositionTable.put(zobristKey, new EntryTT(depth, val, hashfEXACT));
+            transpositionTable.put(zobristKey, new EntryTT(depth, val, val));
         if (val >= beta)
-            transpositionTable.put(zobristKey, new EntryTT(depth, val, hashfBETA));
+            transpositionTable.put(zobristKey, new EntryTT(depth, val, Integer.MAX_VALUE));
         //System.out.println("val: " + val);
-
+        //System.out.println("EXT: " + val);
         return val;
     }
+
 
     /*private int AlphaBeta(int depth, int alpha, int beta) throws TimeoutException {
         int val, hashf = hashfALPHA;
@@ -237,7 +240,7 @@ public class AISearcher {
     }*/
 
     protected void timeCheck() throws TimeoutException {
-        if ((System.currentTimeMillis() - startTime) / 1000 > timeLimit * (99.0 / 100.0))
+        if ((System.currentTimeMillis() - startTime) / 1000 > timeLimit * (90.0 / 100.0))
             throw new TimeoutException();
     }
 
@@ -246,42 +249,26 @@ public class AISearcher {
 
         int winner = getGame().getWinner();
 
-        /*if (winner == Game.PLAYER_1)
+        if (winner == Game.PLAYER_1)
             return MAX_SCORE;
         else if (winner == Game.PLAYER_2)
             return MIN_SCORE;
-        else {*/
-        for (int row = 0; row < game.getRows(); row++)
-            score += evaluate(game.getCellsForRow(row));
+        else {
+            for (int row = 0; row < game.getRows(); row++)
+                score += evaluate(game.getCellsForRow(row));
 
-        for (int col = 0; col < game.getCols(); col++)
-            score += evaluate(game.getCellsForColumns(col));
+            for (int col = 0; col < game.getCols(); col++)
+                score += evaluate(game.getCellsForColumns(col));
 
-        for (int diag = 0; diag < game.getDiagonals(); diag++)
-            if (game.getDiagonalSize(diag) >= game.getK())
-                score += evaluate(game.getDiagonalSquares(diag));
+            for (int diag = 0; diag < game.getDiagonals(); diag++)
+                if (game.getDiagonalSize(diag) >= game.getK())
+                    score += evaluate(game.getDiagonalSquares(diag));
 
-        for (int diag = 0; diag < game.getDiagonals(); diag++)
-            if (game.getDiagonalSize(diag) >= game.getK())
-                score += evaluate(game.getAntiDiagonalSquares(diag));
-
-        /*int midpoint = (game.getDiagonals() / 2) + 1;
-        game.resetItemsInDiagonal();
-        for (int diag = 1; diag <= game.getDiagonals(); diag++)
-            score += evaluate(game.getDiagonalSquares(diag, midpoint));
-
-        int n = game.getRows(), j = n - 1, counter = 0;
-        for (int i = 0; i < n; ++i) {
-            counter++;
-            score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
+            for (int diag = 0; diag < game.getDiagonals(); diag++)
+                if (game.getDiagonalSize(diag) >= game.getK())
+                    score += evaluate(game.getAntiDiagonalSquares(diag));
         }
-        int i = n - 1;
-        for (j = n - 2; j >= 0; --j) {
-            counter--;
-            score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
-        }*/
         return score;
-        //}
     }
 
     protected int evaluate(int[] line) {

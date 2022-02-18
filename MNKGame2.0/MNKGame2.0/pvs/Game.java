@@ -198,7 +198,7 @@ public class Game implements Cloneable {
         return list;
     }
 
-    /*public int[] getDiagonalSquares(int diag, int midpoint) {
+    public int[] getDiagonalSquares(int diag, int midpoint) {
         int[] list = new int[getDiagonalSize(diag - 1)];
         int[][] board = getBoard();
         int rowIndex, columnIndex;
@@ -218,7 +218,7 @@ public class Game implements Cloneable {
             }
         }
         return list;
-    }*/
+    }
 
     public int[] getAntiDiagonalSquares(int counter, int i, int j) {
         int[] list = new int[getDiagonalSize(counter - 1)];
