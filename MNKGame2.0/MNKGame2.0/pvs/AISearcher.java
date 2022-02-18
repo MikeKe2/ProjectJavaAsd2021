@@ -3,7 +3,6 @@ package pvs;
 import mnkgame.MNKCell;
 
 import java.util.HashMap;
-import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
 import static pvs.Game.*;
@@ -57,19 +56,24 @@ public class AISearcher {
             //iterativeDeepening
             for (int i = 1; i <= depth; i++) {
                 partialScore = findBestMove(i, alpha, beta);
+                timeCheck();
                 //Aspiration
-                if ((checkIfAiTurn() && partialScore.second() > bestScore) || (!checkIfAiTurn() && partialScore.second() <= bestScore)) {
+                //System.out.println("Depth:" + depth);
+                //System.out.println("Score:" + partialScore.second() + "\t move" + partialScore.first());
+                if (partialScore.second() > bestScore) {
                     bestScore = partialScore.second();
                     bestMove = partialScore.first();
                 }
                 /*if (((partialScore.second() <= alpha && alpha != Game.MIN_SCORE) || (beta != MAX_SCORE && partialScore.second() >= beta)) && i > 1) {
+                    System.out.println("alpha: " + alpha + "\tbeta: " + beta);
                     alpha = Game.MIN_SCORE;
                     beta = Game.MAX_SCORE;
                     i--;
                 } else {
-                    alpha = partialScore.second() - 100;
-                    beta = partialScore.second() + 100;
-                }
+                    alpha = partialScore.second() - alpha / 4;
+                    beta = partialScore.second() + beta / 4;
+                }*/
+                /*
                 if ((IamP1 && partialScore.second() >= bestScore) || (!IamP1 && partialScore.second() <= bestScore)) {
                     bestScore = partialScore.second();
                     bestMove = partialScore.first();
@@ -85,17 +89,15 @@ public class AISearcher {
     }
 
     private int generateRandomMove() {
-        Random rand = new Random();
 
         for (int move : game.generateMoves()) {
-            if (rand.nextInt(game.getCols() * game.getRows() - 1) == 0)
-                return move;
+            return move;
         }
         throw new IllegalStateException("Failed to generate move.");
     }
 
     private Game.IntegerPair findBestMove(int depth, int alpha, int beta) throws TimeoutException {
-        int score = alpha;
+        int score = checkIfAiTurn() ? MIN_SCORE - 1 : MAX_SCORE + 1;
         int partialBestMove = 0;
 
         for (int move : getGame().generateMoves()) {
@@ -106,18 +108,14 @@ public class AISearcher {
             getGame().unPlayMove();
 
             timeCheck();
-            /*if (IamP1 && score >= max) {
-                max = score;
-                partialBestMove = move;
-            } else if (!IamP1 && score <= min) {
-                min = score;
-                partialBestMove = move;
-            }*/
-            if (searchResult >= score) {
+
+            if (checkIfAiTurn() ? searchResult > score : searchResult < score) {
+                System.out.println("move: " + move + "\tscore: " + score + "\tsearch: " + searchResult);
                 score = searchResult;
                 partialBestMove = move;
             }
         }
+
         return new Game.IntegerPair(partialBestMove, score);
     }
 
