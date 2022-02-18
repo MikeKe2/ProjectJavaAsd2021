@@ -1,7 +1,6 @@
 package pvs;
 
 import mnkgame.MNKCell;
-import mnkgame.MNKGameState;
 
 import java.util.HashMap;
 import java.util.concurrent.TimeoutException;
@@ -28,16 +27,12 @@ public class AISearcher {
     private long startTime;
     final private int timeLimit;
     private final HashMap<Long, EntryTT> transpositionTable;
-    private boolean IamP1;
-    private MNKGameState myWin;
-    private MNKGameState yourWin;
+    private boolean first;
 
     public AISearcher(Game game, int timeLimit, boolean first) {
         this.game = game;
         this.timeLimit = timeLimit;
-        this.IamP1 = first;
-        myWin = first ? MNKGameState.WINP1 : MNKGameState.WINP2;
-        yourWin = first ? MNKGameState.WINP2 : MNKGameState.WINP1;
+        this.first = first;
         transpositionTable = new HashMap<>(MAX_SCORE);
     }
 
@@ -62,28 +57,29 @@ public class AISearcher {
 
             for (int i = 1; i <= depth; i++) {
                 partialScore = findBestMove(i, alpha, beta);
-                bestScore = partialScore.second();
-                bestMove = partialScore.first();
-                timeCheck();
+
+                //System.out.println("Depth:" + i + "\t isAITurn?: " + checkIfAiTurn() + "\tScore:" + partialScore.score() + "\t move" + partialScore.move());
+                if (partialScore.score() > bestScore) {
+                    bestScore = partialScore.score();
+                    bestMove = partialScore.move();
+                }
+
                 //Aspiration
-                System.out.println("Depth:" + i + "\t isAITurn?: " + checkIfAiTurn() + "\tScore:" + partialScore.second() + "\t move" + partialScore.first());
-                /*if (partialScore.second() > bestScore) {
-                    bestScore = partialScore.second();
-                    bestMove = partialScore.first();
-                }*/
-                /*if (((partialScore.second() <= alpha && alpha != Game.MIN_SCORE) || (beta != MAX_SCORE && partialScore.second() >= beta)) && i > 1) {
+                /*if (((partialScore.score() <= alpha || partialScore.score() >= beta)) && i > 1) {
                     System.out.println("alpha: " + alpha + "\tbeta: " + beta);
                     alpha = Game.MIN_SCORE;
                     beta = Game.MAX_SCORE;
                     i--;
                 } else {
-                    alpha = partialScore.second() - alpha / 4;
-                    beta = partialScore.second() + beta / 4;
+                    System.out.println("alpha: " + alpha + "\tbeta: " + beta);
+                    alpha =  alpha + partialScore.score();
+                    beta = partialScore.score() + (beta - 100);
+                    System.out.println("alpha: " + alpha + "\tbeta: " + beta);
                 }*/
                 /*
-                if ((IamP1 && partialScore.second() >= bestScore) || (!IamP1 && partialScore.second() <= bestScore)) {
-                    bestScore = partialScore.second();
-                    bestMove = partialScore.first();
+                if ((IamP1 && partialScore.score() >= bestScore) || (!IamP1 && partialScore.score() <= bestScore)) {
+                    bestScore = partialScore.score();
+                    bestMove = partialScore.move();
                 }*/
             }
         } catch (TimeoutException ex) {
@@ -91,8 +87,10 @@ public class AISearcher {
             if (bestMove == -1)
                 bestMove = generateRandomMove();
         }
+        if (!game.checkIfEmpty(bestMove))
+            bestMove = generateRandomMove();
         this.game = backupGame;
-        //System.out.println("Move: " + bestMove);
+        System.out.println("Move: " + bestMove);
         return bestMove;
     }
 
@@ -115,8 +113,8 @@ public class AISearcher {
             getGame().unPlayMove();
 
             timeCheck();
-            //System.out.println("Score:" + searchResult + "\t move" + move);
-            if (Math.abs(searchResult) > score) {
+            System.out.println("search result score:" + searchResult + "\t for move" + move + "\t depth:" + depth);
+            if (searchResult > score) {
                 score = searchResult;
                 partialBestMove = move;
             }
@@ -125,13 +123,14 @@ public class AISearcher {
     }
 
     private boolean checkIfAiTurn() {
-        return IamP1 == (game.getCurrentPlayer() == PLAYER_1);
+        return first == (game.getCurrentPlayer() == PLAYER_1);
     }
 
     private int AlphaBeta(boolean minMax, int depth, int alpha, int beta) throws TimeoutException {
-        int val, a, b;
+        int val = 0;
+        int a, b;
         long zobristKey = getGame().computeKey();
-
+        timeCheck();
         EntryTT entry = transpositionTable.get(zobristKey);
         if (entry != null) {
             if (depth <= entry.depth) {
@@ -153,7 +152,8 @@ public class AISearcher {
             val = MIN_SCORE;
             a = alpha;
             for (int move : getGame().generateMoves()) {
-                while (val < beta && getGame().generateMoves().iterator().hasNext()) {
+                if (val < beta) {
+                    timeCheck();
                     game.playMove(move);
                     val = Math.max(val, AlphaBeta(false, depth - 1, a, beta));
                     a = Math.max(a, val);
@@ -164,20 +164,25 @@ public class AISearcher {
             val = MAX_SCORE;
             b = beta;
             for (int move : getGame().generateMoves()) {
-                while (val < beta && getGame().generateMoves().iterator().hasNext()) {
+                if (val > alpha) {
+                    timeCheck();
                     game.playMove(move);
                     val = Math.min(val, AlphaBeta(true, depth - 1, alpha, b));
+                    System.out.println("val: " + val + " \tdepth " + depth);
                     b = Math.min(b, val);
                     game.unPlayMove();
                 }
             }
+
         }
         if (val <= alpha)
-            transpositionTable.put(zobristKey, new EntryTT(depth, alpha, hashfALPHA));
+            transpositionTable.put(zobristKey, new EntryTT(depth, val, hashfALPHA));
         if (val > alpha && val < beta)
             transpositionTable.put(zobristKey, new EntryTT(depth, val, hashfEXACT));
         if (val >= beta)
-            transpositionTable.put(zobristKey, new EntryTT(depth, beta, hashfBETA));
+            transpositionTable.put(zobristKey, new EntryTT(depth, val, hashfBETA));
+        //System.out.println("val: " + val);
+
         return val;
     }
 
@@ -240,34 +245,34 @@ public class AISearcher {
 
         int winner = getGame().getWinner();
 
-        if (winner == Game.PLAYER_1)
-            return IamP1 ? Game.MAX_SCORE : MIN_SCORE;
+        /*if (winner == Game.PLAYER_1)
+            return MAX_SCORE;
         else if (winner == Game.PLAYER_2)
-            return IamP1 ? Game.MIN_SCORE : MAX_SCORE;
-        else {
-            for (int row = 0; row < game.getRows(); row++)
-                score += evaluate(game.getCellsForRow(row));
+            return MIN_SCORE;
+        else {*/
+        for (int row = 0; row < game.getRows(); row++)
+            score += evaluate(game.getCellsForRow(row));
 
-            for (int col = 0; col < game.getCols(); col++)
-                score += evaluate(game.getCellsForColumns(col));
+        for (int col = 0; col < game.getCols(); col++)
+            score += evaluate(game.getCellsForColumns(col));
 
-            int midpoint = (game.getDiagonals() / 2) + 1;
-            game.resetItemsInDiagonal();
-            for (int diag = 1; diag <= game.getDiagonals(); diag++)
-                score += evaluate(game.getDiagonalSquares(diag, midpoint));
+        int midpoint = (game.getDiagonals() / 2) + 1;
+        game.resetItemsInDiagonal();
+        for (int diag = 1; diag <= game.getDiagonals(); diag++)
+            score += evaluate(game.getDiagonalSquares(diag, midpoint));
 
-            int n = game.getRows(), j = n - 1, counter = 0;
-            for (int i = 0; i < n; ++i) {
-                counter++;
-                score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
-            }
-            int i = n - 1;
-            for (j = n - 2; j >= 0; --j) {
-                counter--;
-                score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
-            }
-            return score;
+        int n = game.getRows(), j = n - 1, counter = 0;
+        for (int i = 0; i < n; ++i) {
+            counter++;
+            score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
         }
+        int i = n - 1;
+        for (j = n - 2; j >= 0; --j) {
+            counter--;
+            score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
+        }
+        return score;
+        //}
     }
 
     protected int evaluate(int[] line) {

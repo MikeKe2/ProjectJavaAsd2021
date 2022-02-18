@@ -8,7 +8,7 @@ import java.util.Random;
 
 public class Game implements Cloneable {
 
-    record IntegerPair(int first, int second) {
+    record IntegerPair(int move, int score) {
     }
 
     public static final int MAX_SCORE = 1 << 14;
@@ -102,7 +102,7 @@ public class Game implements Cloneable {
     }
 
     public int getMove(int row, int col) {
-        return row * rows + col;
+        return row * columns + col;
     }
 
     public int getRow(int move) {
@@ -119,6 +119,10 @@ public class Game implements Cloneable {
 
     public int getDiagonals() {
         return rows + rows - 1;
+    }
+
+    public boolean checkIfEmpty(int bestMove) {
+        return board[bestMove] == PLAYER_NONE;
     }
 
     public void playMove(MNKCell move) {
@@ -224,26 +228,26 @@ public class Game implements Cloneable {
         // Horizontal check
         n = 1;
         for (int k = 1; j - k >= 0 && B[i][j - k] == s; k++) n++; // backward check
-        for (int k = 1; j + k < rows && B[i][j + k] == s; k++) n++; // forward check
+        for (int k = 1; j + k < columns && B[i][j + k] == s; k++) n++; // forward check
         if (n >= K) return turn;
 
         // Vertical check
         n = 1;
         for (int k = 1; i - k >= 0 && B[i - k][j] == s; k++) n++; // backward check
-        for (int k = 1; i + k < columns && B[i + k][j] == s; k++) n++; // forward check
+        for (int k = 1; i + k < rows && B[i + k][j] == s; k++) n++; // forward check
         if (n >= K) return turn;
 
 
         // Diagonal check
         n = 1;
         for (int k = 1; i - k >= 0 && j - k >= 0 && B[i - k][j - k] == s; k++) n++; // backward check
-        for (int k = 1; i + k < columns && j + k < rows && B[i + k][j + k] == s; k++) n++; // forward check
+        for (int k = 1; i + k < rows && j + k < columns && B[i + k][j + k] == s; k++) n++; // forward check
         if (n >= K) return turn;
 
         // Anti-diagonal check
         n = 1;
-        for (int k = 1; i - k >= 0 && j + k < rows && B[i - k][j + k] == s; k++) n++; // backward check
-        for (int k = 1; i + k < columns && j - k >= 0 && B[i + k][j - k] == s; k++) n++; // backward check
+        for (int k = 1; i - k >= 0 && j + k < columns && B[i - k][j + k] == s; k++) n++; // backward check
+        for (int k = 1; i + k < rows && j - k >= 0 && B[i + k][j - k] == s; k++) n++; // backward check
         if (n >= K) return turn;
 
         return PLAYER_NONE;

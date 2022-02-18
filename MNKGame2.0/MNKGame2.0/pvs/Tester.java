@@ -35,7 +35,7 @@ public class Tester {
 		configurationTest(4, 3, 3); // vittoria
 		configurationTest(4, 4, 3); // vittoria
 		configurationTest(4, 4, 4); // patta
-		/*configurationTest(5, 4, 4); // patta
+		configurationTest(5, 4, 4); // patta
 		configurationTest(5, 5, 4); // patta
 		configurationTest(5, 5, 5); // patta
 		configurationTest(6, 4, 4); // patta
@@ -55,7 +55,7 @@ public class Tester {
 		configurationTest(8, 8, 4); // vittoria
 		configurationTest(10, 10, 5); // ?
 		configurationTest(50, 50, 10); // ?
-		configurationTest(70, 70, 10); // ?*/
+		configurationTest(70, 70, 10); // ?
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class Tester {
 
 	/**
 	 * Tests a given m,n,k configuration. Just like in the official tournament, four
-	 * games for each configuration are played. Each player gets to move first two
+	 * games for each configuration are played. Each player gets to move move two
 	 * times out of four.
 	 *
 	 * @param m The number of rows.
