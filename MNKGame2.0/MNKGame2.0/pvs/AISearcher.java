@@ -12,13 +12,13 @@ public class AISearcher {
     public static class EntryTT {
 
         public int depth;
-        public int flag;
-        public int value;
+        public int lowerbound;
+        public int upperbound;
 
-        public EntryTT(int depth, int flag, int value) {
+        public EntryTT(int depth, int lowerbound, int upperbound) {
             this.depth = depth;
-            this.flag = flag;
-            this.value = value;
+            this.lowerbound = lowerbound;
+            this.upperbound = upperbound;
         }
 
     }
@@ -57,7 +57,7 @@ public class AISearcher {
 
             for (int i = 1; i <= depth; i++) {
                 partialScore = findBestMove(i, alpha, beta);
-
+                System.out.println("Depth:" + i);
                 //System.out.println("Depth:" + i + "\t isAITurn?: " + checkIfAiTurn() + "\tScore:" + partialScore.score() + "\t move" + partialScore.move());
                 if (partialScore.score() > bestScore) {
                     bestScore = partialScore.score();
@@ -90,7 +90,9 @@ public class AISearcher {
         if (!game.checkIfEmpty(bestMove))
             bestMove = generateRandomMove();
         this.game = backupGame;
+        long endTime = System.currentTimeMillis();
         System.out.println("Move: " + bestMove);
+        System.out.println("Timer: " + (endTime - startTime));
         return bestMove;
     }
 
@@ -126,26 +128,6 @@ public class AISearcher {
         return first == (game.getCurrentPlayer() == PLAYER_1);
     }
 
-    int Quiesce(int alpha, int beta) {
-        int stand_pat = evaluate();
-        if (stand_pat >= beta)
-            return beta;
-        if (alpha < stand_pat)
-            alpha = stand_pat;
-
-        for (int move : getGame().generateMoves()) {
-            game.playMove(move);
-            int score = -Quiesce(-beta, -alpha);
-            game.unPlayMove();
-
-            if (score >= beta)
-                return beta;
-            if (score > alpha)
-                alpha = score;
-        }
-        return alpha;
-    }
-
     private int AlphaBeta(boolean minMax, int depth, int alpha, int beta) throws TimeoutException {
         int val = 0;
         int a, b;
@@ -154,20 +136,20 @@ public class AISearcher {
         EntryTT entry = transpositionTable.get(zobristKey);
         if (entry != null) {
             if (depth <= entry.depth) {
-                if (entry.flag == hashfEXACT) {
+                /*if (entry.flag == hashfEXACT) {
                     return entry.value;
                 } else if (entry.flag == hashfBETA) {
                     beta = Math.min(beta, entry.value);
                 } else if (entry.flag == hashfALPHA) {
                     alpha = Math.max(alpha, entry.value);
-                }
+                }*/
                 if (alpha >= beta) {
                     return entry.value;
                 }
             }
         }
         if (depth == 0) {
-            val = Quiesce(alpha, beta);
+            val = evaluate();
         } else if (minMax) {
             val = MIN_SCORE;
             a = alpha;
@@ -275,7 +257,15 @@ public class AISearcher {
         for (int col = 0; col < game.getCols(); col++)
             score += evaluate(game.getCellsForColumns(col));
 
-        int midpoint = (game.getDiagonals() / 2) + 1;
+        for (int diag = 0; diag < game.getDiagonals(); diag++)
+            if (game.getDiagonalSize(diag) >= game.getK())
+                score += evaluate(game.getDiagonalSquares(diag));
+
+        for (int diag = 0; diag < game.getDiagonals(); diag++)
+            if (game.getDiagonalSize(diag) >= game.getK())
+                score += evaluate(game.getAntiDiagonalSquares(diag));
+
+        /*int midpoint = (game.getDiagonals() / 2) + 1;
         game.resetItemsInDiagonal();
         for (int diag = 1; diag <= game.getDiagonals(); diag++)
             score += evaluate(game.getDiagonalSquares(diag, midpoint));
@@ -289,7 +279,7 @@ public class AISearcher {
         for (j = n - 2; j >= 0; --j) {
             counter--;
             score += evaluate(game.getAntiDiagonalSquares(counter, i, j));
-        }
+        }*/
         return score;
         //}
     }

@@ -118,7 +118,7 @@ public class Game implements Cloneable {
     }
 
     public int getDiagonals() {
-        return rows + rows - 1;
+        return rows + columns - 1;
     }
 
     public boolean checkIfEmpty(int bestMove) {
@@ -170,7 +170,35 @@ public class Game implements Cloneable {
         itemsInDiagonal = 0;
     }
 
-    public int[] getDiagonalSquares(int diag, int midpoint) {
+    public int[] getDiagonalSquares(int k) {
+        int[][] board = getBoard();
+        int[] list = new int[getDiagonalSize(k)];
+        int idx = 0;
+        for (int j = 0; j <= k; j++) {
+            int i = k - j;
+            if (i < rows && j < columns) {
+                list[idx] = board[i][j];
+                idx++;
+            }
+        }
+        return list;
+    }
+
+    public int[] getAntiDiagonalSquares(int k) {
+        int[][] board = getBoard();
+        int[] list = new int[getDiagonalSize(k)];
+        int idx = 0;
+        for (int j = 0; j <= k; j++) {
+            int i = k - j;
+            if (i < rows && j < columns) {
+                list[idx] = board[i][columns - 1 - j];
+                idx++;
+            }
+        }
+        return list;
+    }
+
+    /*public int[] getDiagonalSquares(int diag, int midpoint) {
         int[] list = new int[getDiagonalSize(diag - 1)];
         int[][] board = getBoard();
         int rowIndex, columnIndex;
@@ -190,7 +218,7 @@ public class Game implements Cloneable {
             }
         }
         return list;
-    }
+    }*/
 
     public int[] getAntiDiagonalSquares(int counter, int i, int j) {
         int[] list = new int[getDiagonalSize(counter - 1)];
