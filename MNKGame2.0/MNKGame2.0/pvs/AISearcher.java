@@ -152,6 +152,7 @@ public class AISearcher {
         }
         if (depth == 0) {
             val = evaluate();
+            //System.out.println(val);
         } else if (minimum) {
             val = MIN_SCORE;
             a = alpha;
@@ -178,12 +179,13 @@ public class AISearcher {
             }
 
         }
-        if (val <= alpha)
+        /*if (val <= alpha)
             transpositionTable.put(zobristKey, new EntryTT(depth, Integer.MIN_VALUE, val));
         if (val > alpha && val < beta)
             transpositionTable.put(zobristKey, new EntryTT(depth, val, val));
         if (val >= beta)
-            transpositionTable.put(zobristKey, new EntryTT(depth, val, Integer.MAX_VALUE));
+            transpositionTable.put(zobristKey, new EntryTT(depth, val, Integer.MAX_VALUE));*/
+
         //System.out.println("val: " + val);
         //System.out.println("EXT: " + val);
         return val;
@@ -240,8 +242,8 @@ public class AISearcher {
     }*/
 
     protected void timeCheck() throws TimeoutException {
-        if ((System.currentTimeMillis() - startTime) / 1000 > timeLimit * (90.0 / 100.0))
-            throw new TimeoutException();
+       /* if ((System.currentTimeMillis() - startTime) / 1000 > timeLimit * (90.0 / 100.0))
+            throw new TimeoutException();*/
     }
 
     public int evaluate() {
