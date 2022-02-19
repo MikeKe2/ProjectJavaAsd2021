@@ -2,7 +2,6 @@ package pvs;
 
 import mnkgame.MNKCell;
 
-import java.util.HashMap;
 import java.util.concurrent.TimeoutException;
 
 import static pvs.Game.MAX_SCORE;
@@ -10,29 +9,13 @@ import static pvs.Game.MIN_SCORE;
 
 public class AISearcher {
 
-    public static class EntryTT {
-
-        public int depth;
-        public int lowerbound;
-        public int upperbound;
-
-        public EntryTT(int depth, int lowerbound, int upperbound) {
-            this.depth = depth;
-            this.lowerbound = lowerbound;
-            this.upperbound = upperbound;
-        }
-
-    }
-
     private Game game;
     private long startTime;
     final private int timeLimit;
-    private final HashMap<Long, EntryTT> transpositionTable;
 
     public AISearcher(Game game, int timeLimit) {
         this.game = game;
         this.timeLimit = timeLimit;
-        transpositionTable = new HashMap<>(MAX_SCORE);
     }
 
     public void update(MNKCell move) {
@@ -56,24 +39,18 @@ public class AISearcher {
             depth = depth > 10 ? depth / 2 : depth;
             for (int i = 0; i < depth; i++) {
                 partialScore = findBestMove(i);
-                //System.out.println("Depth:" + i + "\t isAITurn?: " + checkIfAiTurn() + "\tScore:" + partialScore.score() + "\t move" + partialScore.move());
                 if (partialScore.score() > bestScore) {
                     bestScore = partialScore.score();
                     bestMove = partialScore.move();
                 }
             }
-        } catch (
-                TimeoutException ex) {
-            //System.out.println("Error, move not found on time.");
+        } catch (TimeoutException ex) {
             if (bestMove == -1) bestMove = generateRandomMove();
         }
-        if (!game.checkIfEmpty(bestMove)) bestMove =
+        if (!game.checkIfEmpty(bestMove)) bestMove = generateRandomMove();
 
-                generateRandomMove();
         this.game = backupGame;
-        long endTime = System.currentTimeMillis();
-        System.out.println("Move: " + bestMove);
-        System.out.println("Timer: " + (endTime - startTime));
+
         return bestMove;
     }
 
@@ -89,13 +66,11 @@ public class AISearcher {
         int partialBestMove = 0;
         boolean isDying = false;
 
-
         for (int move : getGame().generateMoves()) {
             timeCheck();
 
             getGame().playMove(move);
             int searchResult = AlphaBeta(false, depth, Game.MIN_SCORE, Game.MAX_SCORE);
-            //System.out.println("FBM_MOVE: " + move + "\tDepth: " + depth + "\t sr: " + searchResult + "\t" + score);
             getGame().unPlayMove();
 
             timeCheck();
@@ -125,23 +100,8 @@ public class AISearcher {
 
     private int AlphaBeta(boolean minimum, int depth, int alpha, int beta) throws TimeoutException {
         int val, a, b;
-        long zobristKey = getGame().computeKey();
 
         timeCheck();
-
-        EntryTT entry = transpositionTable.get(zobristKey);
-        if (entry != null) {
-            if (entry.lowerbound >= beta) {
-                //System.out.println("LB " + entry.lowerbound);
-                return entry.lowerbound;
-            }
-            if (entry.upperbound <= alpha) {
-                //System.out.println("UB " + entry.upperbound);
-                return entry.upperbound;
-            }
-            alpha = Math.max(alpha, entry.lowerbound);
-            beta = Math.min(beta, entry.upperbound);
-        }
 
         if (depth == 0) {
             val = evaluate();
@@ -169,16 +129,6 @@ public class AISearcher {
             }
 
         }
-
-        if (val <= alpha)
-            transpositionTable.put(zobristKey, new EntryTT(depth, Integer.MIN_VALUE, val));
-        if (val > alpha && val < beta)
-            transpositionTable.put(zobristKey, new EntryTT(depth, val, val));
-        if (val >= beta)
-            transpositionTable.put(zobristKey, new EntryTT(depth, val, Integer.MAX_VALUE));
-
-        //System.out.println("val: " + val);
-        //System.out.println("EXT: " + val);
         return val;
     }
 
