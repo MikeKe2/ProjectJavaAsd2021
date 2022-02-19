@@ -56,11 +56,10 @@ public class AISearcher {
         try {
             //iterativeDeepening
             depth = depth > 10 ? depth / 2 : depth;
-            for (int i = 0; i <= depth; i++) {
+            for (int i = 0; i < depth; i++) {
                 partialScore = findBestMove(i, alpha, beta);
                 //System.out.println("Depth:" + i + "\t isAITurn?: " + checkIfAiTurn() + "\tScore:" + partialScore.score() + "\t move" + partialScore.move());
                 if (partialScore.score() > bestScore) {
-                    //System.out.println("Ciao:" + i);
                     bestScore = partialScore.score();
                     bestMove = partialScore.move();
                 }
@@ -117,7 +116,7 @@ public class AISearcher {
 
             getGame().playMove(move);
             int searchResult = AlphaBeta(false, depth, alpha, beta);
-            System.out.println("FBM_MOVE: " + move + "\tDepth: " + depth + "\t sr: " + searchResult + "\t" + score);
+            //System.out.println("FBM_MOVE: " + move + "\tDepth: " + depth + "\t sr: " + searchResult + "\t" + score);
             getGame().unPlayMove();
 
             timeCheck();
@@ -127,14 +126,14 @@ public class AISearcher {
                     partialBestMove = move;
                     score = searchResult;
                 }
-                if (score == MAX_SCORE)
+                if (score == MAX_SCORE && depth == 0)
                     break;
             } else {
                 if (searchResult > defensiveScore) {
                     defensiveScore = searchResult;
                     bestMoveDefensive = move;
                 } else if (searchResult == MIN_SCORE) {
-                    System.out.println("Dying:" + move);
+                    //System.out.println("Dying:" + move);
                     isDying = true;
                 }
             }
@@ -265,8 +264,8 @@ public class AISearcher {
     }*/
 
     protected void timeCheck() throws TimeoutException {
-       /* if ((System.currentTimeMillis() - startTime) / 1000 > timeLimit * (90.0 / 100.0))
-            throw new TimeoutException();*/
+        if ((System.currentTimeMillis() - startTime) / 1000 > timeLimit * (90.0 / 100.0))
+            throw new TimeoutException();
     }
 
     public int evaluate() {
