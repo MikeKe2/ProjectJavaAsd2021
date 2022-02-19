@@ -70,23 +70,22 @@ public class AISearcher {
 
         int firstGuess = 0;
         EntryTT result = null;
-        final List<Integer> moves = new ArrayList<Integer>();
+        final List<Integer> moves = new ArrayList<>();
         getGame().generateMoves().iterator().forEachRemaining(moves::add);
 
         try {
             depth = depth > 10 ? depth / 2 : depth;
             //iterativeDeepening
             for (int i = 1; i <= depth; i++) {
-                firstGuess = MTFD(i, firstGuess);
 
+                firstGuess = Mtdf(i, firstGuess);
                 result = transpositionTable.get(getGame().computeKey());
 
                 //System.out.println("Depth:" + i);
-                //System.out.println("Depth:" + i + "\t isAITurn?: " + checkIfAiTurn() + "\tScore:" + partialScore.score() + "\t move" + partialScore.move());
-                    /*if (partialScore.score() > bestScore) {
-                        bestScore = partialScore.score();
-                        bestMove = partialScore.move();
-                    }*/
+                /*if (partialScore.score() > bestScore) {
+                    bestScore = partialScore.score();
+                    bestMove = partialScore.move();
+                }*/
 
                 //Aspiration
                 /*if (((partialScore.score() <= alpha || partialScore.score() >= beta)) && i > 1) {
@@ -109,16 +108,19 @@ public class AISearcher {
             bestMove = moves.get(result.chosen);
 
         } catch (TimeoutException ex) {
-            //System.out.println("Error, move not found on time.");
-            if (bestMove == -1)
+            if (result != null)
+                bestMove = moves.get(result.chosen);
+            else
                 bestMove = generateRandomMove();
         }
-        if (!game.checkIfEmpty(bestMove))
-            bestMove = generateRandomMove();
+
+
         this.game = backupGame;
+
         long endTime = System.currentTimeMillis();
         System.out.println("Move: " + bestMove);
         System.out.println("Timer: " + (endTime - startTime));
+
         return bestMove;
     }
 
@@ -129,7 +131,7 @@ public class AISearcher {
         throw new IllegalStateException("Failed to generate move.");
     }
 
-    private int MTFD(int depth, int firstGuess) throws TimeoutException {
+    private int Mtdf(int depth, int firstGuess) throws TimeoutException {
         int score = firstGuess;
         int lowerbound = Integer.MIN_VALUE;
         int upperbound = Integer.MAX_VALUE;
@@ -140,7 +142,7 @@ public class AISearcher {
             timeCheck();
 
             int beta = (score == lowerbound) ? score + 1 : score;
-
+            //System.out.println("Depth: " + depth + "\t beta: " + beta);
             //getGame().playMove(move);
             score = AlphaBeta(depth, beta - 1, beta);
             System.out.println("Depth: " + depth + "\t Score: " + score);
@@ -157,7 +159,7 @@ public class AISearcher {
                 partialBestMove = move;
             }*/
         }
-        System.out.println("LB:" + lowerbound + "\t UP: " + upperbound);
+        //System.out.println("LB:" + lowerbound + "\t UP: " + upperbound);
         return score;
     }
 
@@ -167,26 +169,21 @@ public class AISearcher {
 
     private int AlphaBeta(int depth, int alpha, int beta) throws TimeoutException {
 
-        long zobrist_key = getGame().computeKey();
         timeCheck();
-        //System.out.println(minimum + "\t" + depth + "\t" + alpha + "\t" + beta);
+        long zobrist_key = getGame().computeKey();
         EntryTT entry = transpositionTable.get(zobrist_key);
-
         if (entry != null) {
             if (depth <= entry.depth) {
                 if (entry.lowerbound >= beta) {
-                    //System.out.println("LB " + entry.lowerbound);
                     //System.out.println("LB: " + entry.lowerbound);
                     return entry.lowerbound;
                 }
                 if (entry.upperbound <= alpha) {
-                    //System.out.println("UB " + entry.upperbound);
-                    //System.out.println("UP: " + entry.upperbound);
+                    //System.out.println("UB: " + entry.upperbound);
                     return entry.upperbound;
                 }
                 alpha = Math.max(alpha, entry.lowerbound);
                 beta = Math.min(beta, entry.upperbound);
-
             }
         } else {
             entry = new EntryTT();
@@ -199,7 +196,8 @@ public class AISearcher {
             //System.out.println("DEPTH: " + val);
             return val;
         }
-        final boolean isMax = game.getCurrentPlayer() == PLAYER_1;
+
+        final boolean isMax = game.getCurrentPlayer() == (first ? 1 : -1);
         final boolean isMin = !isMax;
 
         int val = (isMax) ? MIN_SCORE : MAX_SCORE;
@@ -213,6 +211,7 @@ public class AISearcher {
             game.playMove(move);
             final int child_val = AlphaBeta(depth - 1, a, b);
             game.unPlayMove();
+
             idx++;
 
             if ((isMax && child_val > val) || (isMin && child_val < val)) {
