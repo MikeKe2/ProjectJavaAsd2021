@@ -137,11 +137,10 @@ public class Game implements Cloneable {
     }
 
     public void unPlayMove() {
-        int index = history[ply - 1];
-        turn = -turn;
-        winner = PLAYER_NONE;
-        ply--;
+        int index = history[--ply];
         board[index] = PLAYER_NONE;
+        winner = PLAYER_NONE;
+        turn = -turn;
     }
 
     public int[] getCellsForRow(int row) {
