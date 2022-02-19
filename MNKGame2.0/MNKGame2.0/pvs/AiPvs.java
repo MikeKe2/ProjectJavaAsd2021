@@ -11,7 +11,7 @@ public class AiPvs implements MNKPlayer {
     @Override
     public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
         game = new Game(M, N, K);
-        searcher = new AISearcher(game, timeout_in_secs, first);
+        searcher = new AISearcher(game, timeout_in_secs);
     }
 
     @Override

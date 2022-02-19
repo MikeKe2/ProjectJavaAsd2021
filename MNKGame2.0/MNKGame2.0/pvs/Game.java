@@ -34,7 +34,6 @@ public class Game implements Cloneable {
     private int ply; // number of past piece placements
     private int turn; // current player
     private int winner; // winning player
-    private int itemsInDiagonal;
 
     public Game(int row, int column, int K) {
         this.rows = row;
@@ -113,10 +112,6 @@ public class Game implements Cloneable {
         return move % columns;
     }
 
-    public int getCurrentPlayer() {
-        return turn;
-    }
-
     public int getDiagonals() {
         return rows + columns - 1;
     }
@@ -165,10 +160,6 @@ public class Game implements Cloneable {
         return Math.min(Math.min(i0, i1), Math.min(i2, i3));
     }
 
-    public void resetItemsInDiagonal() {
-        itemsInDiagonal = 0;
-    }
-
     public int[] getDiagonalSquares(int k) {
         int[][] board = getBoard();
         int[] list = new int[getDiagonalSize(k)];
@@ -193,41 +184,6 @@ public class Game implements Cloneable {
                 list[idx] = board[i][columns - 1 - j];
                 idx++;
             }
-        }
-        return list;
-    }
-
-    public int[] getDiagonalSquares(int diag, int midpoint) {
-        int[] list = new int[getDiagonalSize(diag - 1)];
-        int[][] board = getBoard();
-        int rowIndex, columnIndex;
-        if (diag <= midpoint) {
-            itemsInDiagonal++;
-            for (int j = 0; j < itemsInDiagonal; j++) {
-                rowIndex = (diag - j) - 1;
-                columnIndex = j;
-                list[j] = board[rowIndex][columnIndex];
-            }
-        } else {
-            itemsInDiagonal--;
-            for (int j = 0; j < itemsInDiagonal; j++) {
-                rowIndex = (board.length - 1) - j;
-                columnIndex = (diag - board.length) + j;
-                list[j] = board[rowIndex][columnIndex];
-            }
-        }
-        return list;
-    }
-
-    public int[] getAntiDiagonalSquares(int counter, int i, int j) {
-        int[] list = new int[getDiagonalSize(counter - 1)];
-        int[][] board = getBoard();
-        int k = 0;
-
-        list[k] = board[i][j];
-        for (int row = i - 1, column = j - 1; row >= 0 && column >= 0; --row, --column) {
-            k++;
-            list[k] = board[row][column];
         }
         return list;
     }
