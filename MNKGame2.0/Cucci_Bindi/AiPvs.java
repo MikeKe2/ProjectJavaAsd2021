@@ -1,4 +1,4 @@
-package pvs;
+package Cucci_Bindi;
 
 import mnkgame.MNKCell;
 import mnkgame.MNKPlayer;
@@ -16,7 +16,7 @@ public class AiPvs implements MNKPlayer {
 
     @Override
     public String playerName() {
-        return "hi :)";
+        return "BindQC";
     }
 
     @Override

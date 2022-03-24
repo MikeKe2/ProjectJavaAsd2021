@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/MNKGame2.0/MNKGame2.0.iml" filepath="$PROJECT_DIR$/MNKGame2.0/MNKGame2.0.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/ProjectJavaAsd2021.iml" filepath="$PROJECT_DIR$/.idea/ProjectJavaAsd2021.iml" />
-      <module fileurl="file://$PROJECT_DIR$/monke/monke.iml" filepath="$PROJECT_DIR$/monke/monke.iml" />
     </modules>
   </component>
 </project>

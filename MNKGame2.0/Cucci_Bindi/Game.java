@@ -1,10 +1,9 @@
-package pvs;
+package Cucci_Bindi;
 
 import mnkgame.MNKCell;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Random;
 
 public class Game implements Cloneable {
 

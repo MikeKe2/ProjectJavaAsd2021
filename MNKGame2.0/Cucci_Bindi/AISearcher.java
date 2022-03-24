@@ -1,11 +1,11 @@
-package pvs;
+package Cucci_Bindi;
 
 import mnkgame.MNKCell;
 
 import java.util.concurrent.TimeoutException;
 
-import static pvs.Game.MAX_SCORE;
-import static pvs.Game.MIN_SCORE;
+import static Cucci_Bindi.Game.MAX_SCORE;
+import static Cucci_Bindi.Game.MIN_SCORE;
 
 public class AISearcher {
 
